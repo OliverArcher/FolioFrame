@@ -6,7 +6,7 @@
 
 `versionName 0.4.0` · `versionCode 5` · Android 包名 `io.folioframe.juanying`
 
-最新 APK：[Releases · v0.4.0](https://github.com/OliverArcher/卷影/releases/tag/v0.4.0)
+最新 APK：[Releases · v0.4.0](https://github.com/OliverArcher/FolioFrame/releases/tag/v0.4.0)
 
 ## 0.4.0 更新
 
