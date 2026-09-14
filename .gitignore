@@ -1,0 +1,36 @@
+# Builds
+/build/
+/dist/
+/node_modules/
+*.html~
+*.log
+
+# Android
+/android/.gradle/
+/android/.idea/
+/android/local.properties
+/android/app/build/
+/android/build/
+/android/captures/
+/android/.cxx/
+
+# Capacitor generated (per project)
+/android/app/capacitor.build.gradle
+/android/app/src/main/assets/public/
+/android/app/src/main/assets/capacitor.config.json
+/android/app/src/main/assets/capacitor.plugins.json
+
+# Outputs
+*.apk
+*.aab
+*.ipa
+*.app/
+
+# Editor
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Standalone HTML (generated)
+/FolioFrame-standalone.html
