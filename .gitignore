@@ -1,0 +1,25 @@
+node_modules/
+android/.gradle/
+android/build/
+android/app/build/
+android/signing.properties
+
+# 构建产物：发布时通过 GitHub Release 分发，不进仓库
+*.apk
+FolioFrame-standalone.html
+FolioFrame-dark-*.html
+
+# 字体源文件：仓库只保留 WOFF2，全量 TTF 留在本机
+fonts-source/
+
+# 本机专属构建说明，含私有代理地址
+PRIVATE-BUILD.md
+
+# 开发期间的审计与预览产物
+apk-audit-*/
+device-audit/
+design-concepts/
+问题清单/
+
+# 构建配置由脚本临时写入，仓库中恒为空值
+# frontend/assets/build-config.js 保留在仓库，内容为空

@@ -1,0 +1,18 @@
+{
+  "name": "卷影 · FolioFrame",
+  "short_name": "卷影",
+  "description": "本地优先的书影音与故事记录库，数据全在你的设备上",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#F5EFE0",
+  "theme_color": "#2D4A3E",
+  "lang": "zh-CN",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

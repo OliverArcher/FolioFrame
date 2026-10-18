@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#F5EFE0">
+<meta name="description" content="卷影 FolioFrame：本地优先的书影音与故事记录库">
+<title>卷影 · FolioFrame</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg">
+<link rel="apple-touch-icon" href="icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Noto+Serif+SC:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
+<style>
+@font-face{font-family:'Sarasa Gothic SC';src:url('assets/fonts/sarasa-gothic-sc-regular.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'Sarasa Gothic SC';src:url('assets/fonts/sarasa-gothic-sc-bold.woff2') format('woff2');font-weight:700;font-style:normal;font-display:swap}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --paper:#F5EFE0;--card:#FBF7EC;--ink-green:#2D4A3E;--ochre:#B8763A;
+  --ink:#1F2A24;--warm-gray:#4A4538;--muted:#756F5E;--rule:#D9CFB8;
+  --watching:#2D4A3E;--wishlist:#B8763A;--done:#5A5347;--dropped:#8B3A3A;
+  --badge-watching:rgba(45,74,62,.12);--badge-wishlist:rgba(184,118,58,.14);--badge-done:rgba(90,83,71,.14);--badge-dropped:rgba(139,58,58,.12);
+  --wash-green:rgba(45,74,62,.06);--wash-ochre:rgba(184,118,58,.10);--wash-ochre-strong:rgba(184,118,58,.18);--overlay:rgba(31,42,36,.42);--icon-on-dark:#FBF7EC;
+  --toast-bg:#1F2A24;--toast-ink:#FBF7EC;
+  --side-paper:var(--card);--side-ink:var(--ink);--side-text:var(--warm-gray);--side-muted:var(--muted);--side-rule:var(--rule);
+  --r-card:6px;--r-btn:4px;--r-pill:999px;
+  --shadow:0 1px 2px rgba(31,42,36,.06);--shadow-hover:0 2px 8px rgba(31,42,36,.10);
+  --font-ui:'Sarasa Gothic SC','Noto Sans SC','Microsoft YaHei UI','Segoe UI',sans-serif;
+  --font-serif:'Noto Serif SC','Source Serif 4','Songti SC','STSong','SimSun',serif;
+  --font-content:'Noto Serif SC','Source Serif 4','Songti SC','STSong','SimSun',serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,monospace;
+  --maxw:480px;
+}
+html[data-theme="dark"]{
+  --paper:#17231F;--card:#202C27;--ink-green:#98BFAE;--ochre:#C68A43;
+  --ink:#E8E0CE;--warm-gray:#C7BEAA;--muted:#9A927F;--rule:#34423C;
+  --watching:#98BFAE;--wishlist:#C68A43;--done:#ABA28F;--dropped:#D28B80;
+  --badge-watching:rgba(152,191,174,.16);--badge-wishlist:rgba(198,138,67,.18);--badge-done:rgba(171,162,143,.16);--badge-dropped:rgba(210,139,128,.16);
+  --wash-green:rgba(152,191,174,.10);--wash-ochre:rgba(198,138,67,.14);--wash-ochre-strong:rgba(198,138,67,.25);--overlay:rgba(7,12,10,.68);--icon-on-dark:#17231F;
+  --toast-bg:#0B100D;--toast-ink:#F4EBD9;
+  --side-paper:#12171A;--side-ink:#E8E4D6;--side-text:#B8B2A0;--side-muted:#8F8979;--side-rule:#2B3235;
+  --shadow:none;--shadow-hover:none;
+}
+html[data-theme="dark-contrast"]{
+  --paper:#12171A;--card:#1B2124;--ink-green:#8FB3A2;--ochre:#D89A5E;
+  --ink:#E8E4D6;--warm-gray:#B8B2A0;--muted:#8F8979;--rule:#2B3235;
+  --watching:#8FB3A2;--wishlist:#D89A5E;--done:#9A9280;--dropped:#C98276;
+  --badge-watching:rgba(143,179,162,.16);--badge-wishlist:rgba(216,154,94,.18);--badge-done:rgba(154,146,128,.16);--badge-dropped:rgba(201,130,118,.16);
+  --wash-green:rgba(143,179,162,.10);--wash-ochre:rgba(216,154,94,.14);--wash-ochre-strong:rgba(216,154,94,.25);--overlay:rgba(5,8,9,.70);--icon-on-dark:#12171A;
+  --shadow:none;--shadow-hover:none;
+}
+html,body{height:100%}
+body{
+  font-family:var(--font-content);background:var(--paper);color:var(--warm-gray);
+  font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;
+  -webkit-tap-highlight-color:transparent;
+}
+button{font-family:var(--font-ui);cursor:pointer;border:none;background:none;color:inherit}
+input,select{font-family:var(--font-ui);font-size:inherit;color:var(--ink);background:none;border:none;outline:none}
+textarea{font-family:var(--font-content);font-size:inherit;color:var(--ink);background:none;border:none;outline:none}
+a{color:var(--ochre);text-decoration:none}
+.mono{font-family:var(--font-mono);font-feature-settings:"tnum"}
+
+/* app shell */
+/* #app 不做最大宽度：标题栏始终撑满屏幕，汉堡菜单贴屏幕边缘；内容区由 main 自己居中。 */
+#app{width:100%;min-height:100dvh;display:flex;flex-direction:column;position:relative}
+.topbar{
+  position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:12px;
+  padding:14px 16px;background:var(--paper);border-bottom:1px solid var(--rule);
+  padding-top:max(14px,env(safe-area-inset-top));
+}
+.topbar .menu-btn{font-size:22px;color:var(--ink);width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:var(--r-btn)}
+.topbar .menu-btn:active{background:var(--rule)}
+.topbar .title{font-family:var(--font-ui);font-size:20px;font-weight:700;color:var(--ink);flex:1;letter-spacing:.05em}
+.topbar .search-btn{font-size:18px;color:var(--ink);width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:var(--r-btn)}
+.topbar .search-btn img{width:20px;height:20px;display:block;opacity:.82}
+html[data-theme="dark"] .topbar .search-btn img,html[data-theme="dark-contrast"] .topbar .search-btn img{opacity:.9;filter:brightness(0) saturate(100%) invert(82%) sepia(12%) saturate(570%) hue-rotate(356deg) brightness(95%) contrast(87%)}
+.topbar .search-btn:active{background:var(--rule)}
+
+/* sidenav */
+.sidenav{position:fixed;top:0;left:0;bottom:0;width:260px;max-width:80vw;background:var(--side-paper);z-index:50;transform:translateX(-100%);transition:transform .25s ease-out;border-right:1px solid var(--side-rule);padding-top:env(safe-area-inset-top);display:flex;flex-direction:column}
+.sidenav.open{transform:translateX(0)}
+.sidenav-overlay{position:fixed;inset:0;background:var(--overlay);z-index:40;opacity:0;pointer-events:none;transition:opacity .25s ease-out}
+.sidenav-overlay.show{opacity:1;pointer-events:auto}
+.sidenav-head{padding:24px 20px 16px;border-bottom:1px solid var(--side-rule)}
+.sidenav-head .brand{display:flex;align-items:center;gap:8px;font-size:22px;font-weight:700;color:var(--side-ink);letter-spacing:.06em}.sidenav-head .brand img{width:28px;height:28px;display:block;border-radius:5px}
+.nav-list{padding:8px 0;flex:1;overflow-y:auto}
+.sidenav-foot{padding:10px 12px max(12px,env(safe-area-inset-bottom));border-top:1px solid var(--side-rule)}
+.sidenav-refresh{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:40px;border:1px solid var(--side-rule);border-radius:var(--r-btn);color:var(--side-text);font-size:13px}.sidenav-refresh:active{background:var(--wash-green);color:var(--ink-green)}
+.nav-item{display:flex;align-items:center;gap:12px;padding:13px 20px;color:var(--side-text);font-size:15px;width:100%;text-align:left}
+.nav-item:active{background:var(--wash-green)}
+.nav-item.active{color:var(--ink-green);font-weight:500;background:var(--wash-green)}
+.nav-item .ico{width:20px;height:20px;text-align:center;font-size:16px;opacity:.8;display:flex;align-items:center;justify-content:center}.nav-item .ico img{width:20px;height:20px;display:block;object-fit:contain;opacity:.78}html[data-theme="dark"] .nav-item:not(.active) .ico img,html[data-theme="dark-contrast"] .nav-item:not(.active) .ico img{filter:brightness(0) saturate(100%) invert(82%) sepia(12%) saturate(570%) hue-rotate(356deg) brightness(95%) contrast(87%)}html[data-theme="dark"] .nav-item.active .ico img,html[data-theme="dark-contrast"] .nav-item.active .ico img{filter:brightness(0) saturate(100%) invert(79%) sepia(16%) saturate(577%) hue-rotate(103deg) brightness(94%) contrast(88%)}
+.nav-item .count{margin-left:auto;font-family:var(--font-mono);font-size:12px;color:var(--side-muted)}
+
+
+/* main */
+main{flex:1;padding:16px 16px 96px;width:100%;max-width:var(--maxw);margin:0 auto}
+.view-head{display:flex;align-items:flex-start;gap:12px;margin-bottom:16px}.view-head h1{flex:1}.view-head h1 .sub{font-weight:400}.view-actions{position:relative;flex:0 0 auto}.more-btn{width:36px;height:36px;color:var(--ink);font-size:22px;border-radius:var(--r-btn)}.more-btn:active{background:var(--rule)}.more-menu{position:absolute;right:0;top:40px;z-index:20;min-width:170px;padding:6px;background:var(--card);border:1px solid var(--rule);box-shadow:var(--shadow-hover);border-radius:var(--r-btn)}.more-menu button{display:block;width:100%;padding:10px 12px;text-align:left;font-size:13px;border-radius:3px}.more-menu button:active{background:var(--rule)}.selection-bar{display:flex;align-items:center;gap:8px;margin:-4px 0 12px;padding:8px 12px;background:var(--ink-green);border:1px solid var(--ink-green);border-radius:var(--r-btn);box-shadow:var(--shadow)}.selection-bar .count{flex:1;font-size:12px;color:#FBF7EC}.selection-bar .btn-ghost{color:#FBF7EC;border-color:rgba(251,247,236,.72)}.selection-bar .btn-danger{color:#FFD1C6;border-color:#FFD1C6}
+.view-head h1{font-family:var(--font-ui);font-size:28px;font-weight:700;color:var(--ink);letter-spacing:.02em}
+.view-head .sub{font-size:13px;color:var(--muted);margin-top:2px;font-family:var(--font-mono)}
+.section-label{font-size:12px;color:var(--muted);font-family:var(--font-mono);letter-spacing:.05em;margin:20px 0 10px;text-transform:uppercase}
+
+/* record card */
+.record-list{display:flex;flex-direction:column;gap:10px}.record-card{height:140px;min-height:140px;background:var(--card);border:1px solid var(--rule);border-radius:var(--r-card);padding:12px;display:flex;gap:12px;box-shadow:var(--shadow);transition:box-shadow .2s,transform .2s;overflow:hidden}
+.record-card:hover{box-shadow:var(--shadow-hover);transform:translateY(-2px)}
+.record-card.selected{border-color:var(--ochre);box-shadow:0 0 0 2px var(--wash-ochre-strong)}
+.record-card:active{transform:scale(.99);box-shadow:var(--shadow-hover)}
+.cover{width:48px;height:64px;border-radius:var(--r-btn);flex-shrink:0;object-fit:cover;background:var(--rule);display:flex;align-items:center;justify-content:center;color:#FBF7EC;font-size:20px;font-weight:700;font-family:var(--font-serif)}
+.cover-button{display:flex;padding:0;border:0;background:transparent;cursor:zoom-in;flex-shrink:0;border-radius:var(--r-btn)}
+.cover-button:focus-visible{outline:2px solid var(--ochre);outline-offset:2px}
+.cover.anime{background:var(--ink-green)}
+.cover.movie{background:var(--ochre)}
+.cover.tv{background:var(--done)}
+.cover.book{background:var(--dropped)}
+.card-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.card-title{display:flex;align-items:center;gap:4px;font-family:var(--font-ui);font-size:15px;font-weight:600;color:var(--ink);line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.card-title-text{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.favorite-btn{width:24px;height:24px;flex:0 0 24px;color:var(--rule);font-size:16px;line-height:1}.favorite-btn.on{color:var(--ochre)}.favorite-btn:focus-visible{outline:2px solid var(--ochre);outline-offset:1px}.selection-check{width:20px;height:20px;flex:0 0 20px;accent-color:var(--ochre)}
+.card-meta{font-size:12px;color:var(--muted);font-family:var(--font-mono);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.card-review{font-family:var(--font-content);font-size:13px;color:var(--warm-gray);line-height:1.5;min-height:1.5em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.card-foot{display:flex;align-items:center;gap:8px;margin-top:auto}
+.progress-bar{flex:1;height:4px;background:var(--rule);border-radius:2px;overflow:hidden;min-width:60px}
+.progress-bar>i{display:block;height:100%;background:var(--ink-green);border-radius:2px}
+.plus-btn{width:36px;height:36px;border-radius:var(--r-btn);background:var(--ink-green);color:#FBF7EC;font-size:20px;font-weight:400;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s}
+.plus-btn:active{background:#244037}
+.plus-btn:disabled{background:var(--rule);color:var(--muted)}
+
+/* status badge */
+.badge{display:inline-flex;align-items:center;font-size:11px;font-family:var(--font-mono);padding:2px 8px;border-radius:var(--r-pill);font-weight:500;letter-spacing:.03em}
+.badge.watching{background:var(--badge-watching);color:var(--watching)}
+.badge.wishlist{background:var(--badge-wishlist);color:var(--wishlist)}
+.badge.done{background:var(--badge-done);color:var(--done)}
+.badge.dropped{background:var(--badge-dropped);color:var(--dropped)}
+
+/* rating stars */
+.stars{display:inline-flex;gap:1px;font-family:var(--font-mono)}
+.stars .s{font-size:13px;color:var(--rule);line-height:1}
+.stars .s.on{color:var(--ochre)}
+.stars-input{display:inline-flex;gap:2px}
+.stars-input .s{font-size:22px;color:var(--rule);width:24px;height:32px;display:flex;align-items:center;justify-content:center}
+.stars-input .s.on{color:var(--ochre)}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 16px;border-radius:var(--r-btn);font-size:14px;font-weight:500;font-family:var(--font-serif);transition:background .15s,opacity .15s;min-height:44px}
+.btn-primary{background:var(--ink-green);color:#FBF7EC}
+.btn-primary:active{background:#244037}
+.btn-ghost{background:transparent;color:var(--ink-green);border:1px solid var(--ink-green)}
+.btn-ghost:active{background:var(--wash-green)}
+.btn-ochre{background:var(--ochre);color:#FBF7EC}
+.btn-danger{background:transparent;color:var(--dropped);border:1px solid var(--dropped)}
+.btn-danger:active{background:var(--badge-dropped)}
+.btn-block{width:100%}
+.btn-row{display:flex;gap:8px;margin-bottom:16px}
+.btn-row .btn{flex:1;min-width:0;padding-left:8px;padding-right:8px}
+.btn:disabled{opacity:.4}
+
+/* inputs */
+.field{margin-bottom:14px}
+.field label{display:block;font-size:13px;color:var(--warm-gray);margin-bottom:6px;font-weight:500}
+.field .hint{font-size:11px;color:var(--muted);margin-top:4px;font-family:var(--font-mono)}
+.input,.textarea,.select{width:100%;background:var(--card);border:1px solid var(--rule);border-radius:var(--r-btn);padding:11px 12px;font-size:15px;color:var(--ink);transition:border-color .15s}
+.input:focus,.textarea:focus,.select:focus{border-color:var(--ink-green)}
+.textarea{resize:vertical;min-height:72px;font-family:var(--font-serif);line-height:1.5}
+.select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 4.5L6 7.5L9 4.5' stroke='%238A8472' fill='none' stroke-width='1.5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:34px}
+
+/* segment / tabs */
+.segment{display:flex;gap:4px;background:var(--rule);padding:3px;border-radius:var(--r-btn);margin-bottom:16px}
+.segment button{flex:1;padding:8px;font-size:13px;color:var(--muted);border-radius:3px;font-weight:500}
+.segment button.on{background:var(--card);color:var(--ink)}
+
+/* fab */
+.fab{position:fixed;right:max(16px,calc((100vw - var(--maxw))/2 + 16px));bottom:max(20px,env(safe-area-inset-bottom));width:56px;height:56px;border-radius:50%;background:var(--ink-green);color:#FBF7EC;font-size:28px;font-weight:300;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(31,42,36,.25);z-index:35;transition:transform .15s}
+.fab:active{transform:scale(.92)}
+
+/* sheet (bottom modal) */
+.sheet{position:fixed;inset:0;z-index:60;display:none;align-items:flex-end;justify-content:center}
+.sheet.open{display:flex}
+.sheet-bg{position:absolute;inset:0;background:var(--overlay);animation:fade .2s ease-out}
+.sheet-panel{position:relative;background:var(--card);width:100%;max-width:var(--maxw);max-height:92dvh;border-radius:16px 16px 0 0;display:flex;flex-direction:column;animation:slideup .25s ease-out;padding-bottom:env(safe-area-inset-bottom)}
+.sheet-head{display:flex;align-items:center;justify-content:space-between;padding:8px 16px 12px;border-bottom:1px solid var(--rule)}
+.sheet-head h2{font-size:17px;font-weight:600;color:var(--ink)}
+.sheet-head .close{font-size:22px;color:var(--muted);width:36px;height:36px}
+.sheet-body{padding:16px;overflow-y:auto;flex:1}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+@keyframes slideup{from{transform:translateY(100%)}to{transform:translateY(0)}}
+
+/* search results */
+.search-source{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.result-item{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--rule);width:100%;text-align:left}
+.result-item:active{background:var(--wash-green)}
+.result-item .cover{width:40px;height:56px}
+.result-item .ri-body{flex:1;min-width:0}
+.result-item .ri-title{font-size:14px;font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.source-badge{display:inline-block;vertical-align:1px;margin-left:4px;padding:1px 5px;border-radius:999px;background:var(--badge-watching);color:var(--ink-green);font-size:10px;font-weight:500}.source-badge.tmdb{background:var(--badge-wishlist);color:var(--ochre)}.source-badge.bangumi{background:var(--badge-watching);color:var(--ink-green)}.source-badge.weread{background:var(--badge-wishlist);color:var(--ochre)}
+.result-item .ri-sub{font-size:12px;color:var(--muted);font-family:var(--font-mono);margin-top:2px}
+.result-item .ri-over{font-size:12px;color:var(--warm-gray);margin-top:4px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.result-item .pick{align-self:center;color:var(--ink-green);font-size:18px}
+
+/* empty / loading */
+.empty{text-align:center;padding:60px 24px;color:var(--muted)}
+.empty .big{font-size:48px;color:var(--rule);margin-bottom:12px;font-family:var(--font-serif)}
+.empty h3{font-size:17px;color:var(--ink);margin-bottom:6px}
+.empty p{font-size:14px;margin-bottom:20px;line-height:1.6}
+.loading{text-align:center;padding:40px;color:var(--muted);font-family:var(--font-mono);font-size:13px}
+
+/* stats */
+.stat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px}
+.stat-card{background:var(--card);border:1px solid var(--rule);border-radius:var(--r-card);padding:14px}
+.stat-card .n{font-size:28px;font-weight:700;color:var(--ink);font-family:var(--font-mono);line-height:1}
+.stat-card .l{font-size:12px;color:var(--muted);margin-top:6px;font-family:var(--font-mono)}
+.stat-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--rule)}
+.stat-row .lbl{flex:0 0 80px;font-size:14px;color:var(--warm-gray)}
+.stat-row .bar{flex:1;height:8px;background:var(--rule);border-radius:4px;overflow:hidden}
+.stat-row .bar>i{display:block;height:100%;border-radius:4px}
+.stat-row .num{font-family:var(--font-mono);font-size:13px;color:var(--muted);width:36px;text-align:right}
+
+/* poster viewer */
+.poster-viewer{position:fixed;inset:0;z-index:80;background:rgba(31,42,36,.82);display:none;align-items:center;justify-content:center;padding:24px}
+.poster-viewer.open{display:flex;animation:fade .18s ease-out}
+.poster-viewer img{max-width:min(92vw,720px);max-height:88dvh;width:auto;height:auto;object-fit:contain;border-radius:var(--r-btn);box-shadow:0 8px 32px rgba(0,0,0,.28)}
+.poster-viewer .close{position:absolute;top:max(16px,env(safe-area-inset-top));right:16px;width:44px;height:44px;color:#FBF7EC;font-size:30px;line-height:1}
+.poster-viewer .caption{position:absolute;bottom:max(16px,env(safe-area-inset-bottom));left:24px;right:24px;text-align:center;color:#FBF7EC;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* detail */
+.detail-cover{width:96px;height:136px;border-radius:var(--r-btn);object-fit:cover;flex-shrink:0}
+.detail-cover.ph{display:flex;align-items:center;justify-content:center;color:#FBF7EC;font-size:36px;font-weight:700}
+.detail-head{display:flex;gap:16px;margin-bottom:20px}
+.detail-head h1{display:flex;align-items:flex-start;gap:6px;font-family:var(--font-ui);font-size:22px;font-weight:700;color:var(--ink);line-height:1.25}.detail-head h1 .favorite-btn{margin-top:2px}.title-edit{min-width:0;flex:1;background:transparent;border:0;border-bottom:1px solid transparent;font:inherit;color:inherit;padding:0;line-height:1.25}.title-edit:focus{border-bottom-color:var(--ink-green);outline:none}.cover-preview{width:64px;height:86px;border-radius:var(--r-btn);object-fit:cover;background:var(--rule);vertical-align:middle;margin-top:6px}.cover-tools{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}.cover-tools .btn{min-height:36px;padding:7px 10px;font-size:12px}
+.detail-head .meta{font-size:12px;color:var(--muted);font-family:var(--font-mono);margin-top:6px}
+.detail-head + .field + .field + .field + .field + .field .textarea,.detail-head ~ .field .textarea{font-family:var(--font-content)}
+.detail-summary{font-family:var(--font-content);font-size:13px;color:var(--warm-gray);line-height:1.7}
+.row-line{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--rule)}
+.row-line .k{font-size:14px;color:var(--warm-gray)}
+.row-line .v{font-size:14px;color:var(--ink);font-weight:500}
+
+/* toast */
+.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%) translateY(20px);background:var(--toast-bg);color:var(--toast-ink);border:1px solid var(--rule);padding:10px 18px;border-radius:var(--r-pill);font-size:13px;z-index:70;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;font-family:var(--font-serif)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* filter bar */
+.filter-scroll{display:flex;gap:8px;overflow-x:auto;padding-bottom:12px;margin-bottom:4px;-webkit-overflow-scrolling:touch}
+.filter-scroll::-webkit-scrollbar{display:none}
+.filter-chip{flex-shrink:0;padding:6px 14px;font-size:13px;border-radius:var(--r-pill);border:1px solid var(--rule);color:var(--warm-gray);background:var(--card);white-space:nowrap}
+.filter-chip.on{background:var(--ink-green);color:#FBF7EC;border-color:var(--ink-green)}
+.active-query{display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--wash-ochre);border:1px solid var(--ochre);border-radius:var(--r-btn);padding:8px 10px;margin-bottom:12px;font-size:13px;color:var(--warm-gray)}
+.active-query button{width:28px;height:28px;font-size:20px;color:var(--muted);line-height:1}.search-overlay{position:fixed;inset:0;z-index:75;background:var(--overlay);display:none;padding:calc(12px + env(safe-area-inset-top)) 16px 16px}.search-overlay.open{display:block;animation:fade .16s ease-out}.search-overlay-panel{max-width:var(--maxw);margin:0 auto}.search-overlay-bar{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--rule);border-radius:var(--r-btn);padding:4px 8px}.search-overlay-bar input{flex:1;min-width:0;padding:9px 4px;font-size:16px}.search-overlay-bar button{width:36px;height:36px;font-size:22px;color:var(--muted)}
+
+/* type tag */
+.type-tag{font-size:10px;font-family:var(--font-mono);color:var(--muted);border:1px solid var(--rule);padding:1px 6px;border-radius:var(--r-btn)}
+.source-note{font-size:11px;color:var(--muted);font-family:var(--font-mono);line-height:1.4}
+
+.list-item{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--rule);align-items:center}.list-item.selected{background:var(--wash-ochre)}
+.list-item .cover{width:36px;height:50px;font-size:15px}
+.list-item .li-body{flex:1;min-width:0}
+.list-item .li-title{font-size:14px;font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.list-item .li-meta{font-size:11px;color:var(--muted);font-family:var(--font-mono);margin-top:2px}
+
+@media (min-width:760px){
+  :root{--maxw:960px}
+  main{max-width:var(--maxw);padding:28px 32px 96px}
+  .record-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start}
+  .record-list .record-card{margin-bottom:0}
+}
+@media (min-width:600px) and (max-width:759px){
+  main{padding-left:24px;padding-right:24px}
+}
+@media (min-width:760px){.card-review,.detail-summary,.textarea{font-family:var(--font-serif)}}
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.01ms !important;transition-duration:.01ms !important}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="topbar">
+    <button class="menu-btn" id="menuBtn" aria-label="菜单">≡</button>
+    <div class="title">卷影</div>
+    <button class="search-btn" id="searchBtn" aria-label="搜索"><img src="assets/icons/search.svg" alt=""></button>
+  </header>
+
+  <aside class="sidenav" id="sidenav">
+    <div class="sidenav-head">
+      <div class="brand"><img src="icon.svg" alt=""><span>卷影</span></div>
+    </div>
+    <nav class="nav-list" id="navList"></nav>
+    <div class="sidenav-foot"><button class="sidenav-refresh" type="button" onclick="refreshLibrary()" aria-label="刷新本机记录">↻ 刷新本机记录</button></div>
+  </aside>
+  <div class="sidenav-overlay" id="overlay"></div>
+
+  <main id="view"></main>
+
+  <button class="fab" id="fab" aria-label="添加">+</button>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="search-overlay" id="searchOverlay" role="dialog" aria-modal="true" aria-label="搜索记录"><div class="search-overlay-panel"><form class="search-overlay-bar" id="searchForm"><input id="searchInput" type="text" inputmode="search" enterkeyhint="search" placeholder="搜索标题或短评…" autocomplete="off"><button type="button" id="searchClear" aria-label="清除搜索">×</button></form></div></div>
+<div class="poster-viewer" id="posterViewer" role="dialog" aria-modal="true" aria-label="查看海报">
+  <button class="close" id="posterClose" aria-label="关闭海报">×</button>
+  <img id="posterViewerImage" alt="">
+  <div class="caption" id="posterViewerCaption"></div>
+</div>
+
+<script src="assets/vendor/capacitor.js"></script>
+<script src="assets/vendor/jszip.min.js"></script>
+<script src="assets/build-config.js"></script>
+<script>
+/* ============ utils ============ */
+const $=s=>document.querySelector(s);
+const uuid=()=>(crypto.randomUUID?crypto.randomUUID():'id-'+Date.now()+'-'+Math.random().toString(36).slice(2));
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtDate=ts=>{const d=new Date(ts);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
+const formatDateInput=ts=>ts?new Date(ts).toISOString().slice(0,10):'';
+const TYPE_NAME={anime:'动漫',movie:'电影',tv:'剧集',book:'书籍'};
+const TYPE_COVER={anime:'anime',movie:'movie',tv:'tv',book:'book'};
+const STATUS_NAME={watching:'在看',wishlist:'想看',done:'看过',dropped:'弃坑'};
+const STATUS_KEY={watching:'watching',wishlist:'wishlist',done:'done',dropped:'dropped'};
+const THEMES={light:'浅色',dark:'暗色'};
+const systemDark=window.matchMedia?.('(prefers-color-scheme: dark)');
+function previewTheme(){return document.documentElement.dataset.previewTheme||'';}
+function currentTheme(){const value=localStorage.getItem('folioframe_theme')||'light';return THEMES[value]?value:'light';}
+function followSystemTheme(){return localStorage.getItem('folioframe_theme_auto')!=='false';}
+function applyTheme(theme=currentTheme(),save=true){
+  const requested=THEMES[theme]?theme:'light';
+  if(save)localStorage.setItem('folioframe_theme',requested);
+  const active=previewTheme()||(followSystemTheme()&&systemDark?.matches?'dark':requested);
+  if(active==='light')document.documentElement.removeAttribute('data-theme');else document.documentElement.dataset.theme=active;
+  return active;
+}
+function setThemeFollowSystem(value){localStorage.setItem('folioframe_theme_auto',value?'true':'false');applyTheme(currentTheme(),false);render();}
+function isNativeAndroid(){return window.Capacitor?.getPlatform?.()==='android';}
+const BackupFiles=window.Capacitor?.registerPlugin?.('BackupFiles');
+function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),1800);}
+function clampRating(value){const n=Number(value)||0;return Math.max(0,Math.min(5,n>5?Math.round(n/2):Math.round(n)));}
+function normalizeRecord(r){
+  const record={...r,rating:clampRating(r.rating),status:STATUS_NAME[r.status]?r.status:'watching',progressUnit:r.type==='book'?'chapter':r.progressUnit,lastProgressAt:r.lastProgressAt||r.updatedAt||r.addedAt||Date.now(),favorite:!!r.favorite,watchedAt:r.watchedAt||((r.status==='done')?(r.lastProgressAt||r.updatedAt||r.addedAt):0)};
+  if(record.type==='tv'||record.type==='anime'){
+    record.seasons=record.seasons||{};
+    // Unify Bangumi 'sN' keys into plain numeric keys. Old builds could hold both 's1'
+    // (from metadata completion) and '2' (from the manual “新季” button) for the same
+    // season, which misordered the list and sent writes where the detail view could not
+    // read them. This runs on every load and is idempotent.
+    for(const key of Object.keys(record.seasons)){
+      const m=String(key).match(/^s(\d+)$/);
+      if(!m)continue;
+      const numKey=String(Number(m[1]));
+      if(numKey===key)continue;
+      const src=record.seasons[key];
+      if(record.seasons[numKey]){
+        const dst=record.seasons[numKey];
+        record.seasons[numKey]={...dst,
+          total:src.total||dst.total||0,
+          summary:src.summary||dst.summary||'',
+          cover:src.cover||dst.cover||'',
+          srcId:src.srcId||dst.srcId||'',
+          source:src.source||dst.source||'',
+          label:src.label||dst.label||''};
+        delete record.seasons[key];
+      }else{
+        record.seasons[numKey]=src;
+        delete record.seasons[key];
+      }
+    }
+    if(record.season&&/^s\d+$/.test(String(record.season))){
+      const m=String(record.season).match(/^s(\d+)$/);
+      if(m&&record.seasons[String(Number(m[1]))])record.season=String(Number(m[1]));
+    }
+    const key=String(record.season||1);
+    record.seasons[key]={...{cur:record.cur||0,total:record.total||0,status:record.status||'watching',rating:record.rating||0,shortReview:record.shortReview||'',summary:record.summary||'',cover:record.cover||''},...(record.seasons[key]||{})};
+  }
+  return record;
+}
+function persistActiveSeason(r){
+  if(r.type==='tv'||r.type==='anime'){
+    const key=String(r.season||1);r.seasons=r.seasons||{};
+    const old=r.seasons[key]||{};
+    // summary 是元数据（来自 Bangumi 等），不应被顶层 r.summary 覆盖；
+    // 否则切换到未补全的新季后，顶层空 summary 会把 confirmPick 已写入的简介清空。
+    r.seasons[key]={...old,cur:r.cur||0,total:r.total||0,status:r.status||'watching',rating:clampRating(r.rating),shortReview:r.shortReview||'',summary:old.summary||r.summary||''};
+  }
+  return r;
+}
+function seasonNumber(key){const m=String(key).match(/\d+/);return m?Number(m[0]):Infinity;}
+function seasonKeys(r){return Object.keys(r.seasons||{[String(r.season||1)]:{}}).sort((a,b)=>(seasonNumber(a)-seasonNumber(b))||String(a).localeCompare(String(b)));}
+function infoValue(item){const value=item?.value;return Array.isArray(value)?value.map(v=>typeof v==='object'?(v.v||v.k||''):String(v)).join(', '):String(value||'');}
+function getInfoBox(infobox,keys){const item=(infobox||[]).find(x=>keys.includes(x.key));return item?infoValue(item):'';}
+function sourceName(source){return source==='bangumi'?'Bangumi':source==='tmdb'?'TMDB':source==='weread'?'微信读书':source==='gbooks'?'Google Books':source==='openlibrary'?'Open Library':'手动';}
+function parseSeasonNumber(token){const n=Number(token);if(n)return n;const chinese={一:1,二:2,三:3,四:4,五:5,六:6,七:7,八:8,九:9,十:10,十一:11,十二:12,十三:13,十四:14,十五:15,十六:16,十七:17,十八:18,十九:19,二十:20};return chinese[token]||0;}
+function seasonInfo(title){
+  const raw=String(title||'').trim();
+  // 末尾后缀：分隔符 + 第N季/部/期 或 season N / sN，可连用（如「第二季 第三季」）
+  const parts=[];let base=raw;let match;
+  const tail=/(?:\s|　|[·・:：,，])(?:第\s*([0-9一二三四五六七八九十百]+)\s*(季|部|期)|season\s*([0-9]+)|s([0-9]+))\s*$/i;
+  while((match=base.match(tail))){
+    const token=match[1]||match[3]||match[4]||'';
+    const number=parseSeasonNumber(token);if(!number)break;
+    const unit=match[2]||'季';parts.unshift({number,unit});base=base.slice(0,match.index).trim();
+  }
+  // 回退：标题中段也可能带季标记，但后面还跟着副标题。
+  // 例如 Bangumi 的「无职转生第二季~到了异世界就拿出真本事~」。只认「第N季/部/期」，
+  // 且该标记出现在靠前位置（前 8 字符内），避免把「物语系列 第二季 第三季」拆坏。
+  if(!parts.length){
+    const mid=base.match(/^([^·・:：,，~～\s]{0,8})第\s*([0-9一二三四五六七八九十]+)\s*(季|部|期)/);
+    if(mid){
+      parts.push({number:parseSeasonNumber(mid[2]),unit:mid[3]||'季'});
+      base=mid[1].trim();
+    }
+  }
+  if(!parts.length)return {base:raw,key:'',label:''};
+  const unitCode={部:'p',季:'s',期:'e'};
+  return {base,key:parts.map(p=>(unitCode[p.unit]||'s')+p.number).join('-'),label:parts.map(p=>`第 ${p.number} ${p.unit}`).join(' · ')};
+}
+function seasonLabel(r,key){
+  const meta=r.seasons?.[String(key)]||{};
+  if(meta.label)return meta.label;
+  const m=String(key).match(/^s?(\d+)$/);
+  return m?`第 ${m[1]} 季`:String(key);
+}
+function seasonMapForImport(season,total,status,srcId,summary=''){
+  if(!season?.key)return undefined;
+  const seasons={[season.key]:{cur:0,total:total||0,status:status||'watching',rating:0,shortReview:'',summary,label:season.label,srcId}};
+  const onlySeason=season.key.match(/^s(\d+)$/);
+  if(onlySeason){for(let n=1;n<Number(onlySeason[1]);n++)seasons[`s${n}`]={cur:0,total:0,status:'watching',label:`第 ${n} 季`,placeholder:true};}
+  return seasons;
+}
+function sortRecords(records){return records.slice().sort((a,b)=>(pinFavorites&&Number(b.favorite)-Number(a.favorite))||((b.lastProgressAt||b.addedAt||0)-(a.lastProgressAt||a.addedAt||0)));}
+function viewingYear(r){return new Date(r.watchedAt||r.lastProgressAt||r.addedAt||Date.now()).getFullYear();}
+
+/* ============ db ============ */
+const DB={
+  db:null,
+  open(){return new Promise((res,rej)=>{
+    const r=indexedDB.open('folioframe',1);
+    r.onupgradeneeded=e=>{const db=e.target.result;if(!db.objectStoreNames.contains('records'))db.createObjectStore('records',{keyPath:'id'});};
+    r.onsuccess=e=>{DB.db=e.target.result;res();};
+    r.onerror=e=>rej(e.target.error);
+  });},
+  all(){return new Promise((res,rej)=>{const tx=DB.db.transaction('records','readonly').objectStore('records').getAll();tx.onsuccess=()=>res(tx.result);tx.onerror=()=>rej(tx.error);});},
+  put(r){return new Promise((res,rej)=>{const tx=DB.db.transaction('records','readwrite').objectStore('records').put(r);tx.onsuccess=()=>res();tx.onerror=()=>rej(tx.error);});},
+  del(id){return new Promise((res,rej)=>{const tx=DB.db.transaction('records','readwrite').objectStore('records').delete(id);tx.onsuccess=()=>res();tx.onerror=()=>rej(tx.error);});},
+  clear(){return new Promise((res,rej)=>{const tx=DB.db.transaction('records','readwrite').objectStore('records').clear();tx.onsuccess=()=>res();tx.onerror=()=>rej(tx.error);});}
+};
+
+/* ============ api ============ */
+const API={
+  async bangumi(kw,type){ // subject type: 1 book, 2 anime, 6 real-life
+    const types=Array.isArray(type)?type:[type];
+    // Personal builds route through the bundled Cloudflare proxy because api.bgm.tv is blocked
+    // in mainland China. Public builds talk to the official endpoint directly.
+    const proxy=(window.FOLIOFRAME_CONFIG?.bgmProxy||'').trim();
+    const endpoint=proxy?proxy.replace(/\/+$/,'')+'/v0/search/subjects':'https://api.bgm.tv/v0/search/subjects';
+    const r=await fetch(endpoint+'?limit=12',{method:'POST',headers:{'Accept':'application/json','Content-Type':'application/json'},body:JSON.stringify({keyword:kw,sort:'match',filter:{type:types}})});
+    if(!r.ok)throw new Error('Bangumi 搜索失败（HTTP '+r.status+'）');
+    const j=await r.json();
+    return (j.data||[]).map(x=>({src:'bangumi',srcId:String(x.id),title:x.name_cn||getInfoBox(x.infobox,['简体中文名','中文名'])||x.name,originalTitle:x.name,cover:x.images?.large||x.images?.common||'',year:(x.date||'').slice(0,4),creator:getInfoBox(x.infobox,['动画制作','作者','原作'])||'',summary:x.summary||'',total:(x.total_episodes||x.eps_count)||0}));
+  },
+  async tmdb(kw,key,kind){ // kind: movie/tv
+    const r=await fetch(`https://api.themoviedb.org/3/search/${kind}?api_key=${encodeURIComponent(key)}&query=${encodeURIComponent(kw)}&language=zh-CN&include_adult=false`);
+    if(!r.ok){if(r.status===401||r.status===403)throw new Error('TMDB API Key 无效或无权限');if(r.status===429)throw new Error('TMDB 请求过于频繁，请稍后再试');throw new Error('TMDB 搜索失败（HTTP '+r.status+'）');}
+    const j=await r.json();
+    return (j.results||[]).map(x=>({src:'tmdb',srcId:String(x.id),title:x.title||x.name||'',cover:x.poster_path?('https://image.tmdb.org/t/p/w300'+x.poster_path):'',year:(x.release_date||x.first_air_date||'').slice(0,4),creator:'',summary:x.overview||'',total:x.episode_count||x.number_of_episodes||0}));
+  },
+  async tmdbOptional(kw,kind){const key=localStorage.getItem('tmdb_key')||'';if(!key)return[];return this.tmdb(kw,key,kind);},
+  async weread(kw){
+    const key=(localStorage.getItem('weread_key')||'').trim();
+    if(!key)throw new Error('请在设置里填写微信读书 API Key');
+    const body=JSON.stringify({api_name:'/store/search',keyword:kw,scope:10,count:12,skill_version:'1.0.4'});
+    const endpoint='https://i.weread.qq.com/api/agent/gateway';
+    const headers={Authorization:'Bearer '+key,'Content-Type':'application/json','Accept':'application/json'};
+    let payload;
+    // The gateway reaches fine from mainland China; only its CORS rule blocks the WebView, so
+    // Android performs the request through the native bridge. Browsers cannot pass that check.
+    const bridge=isNativeAndroid()?window.Capacitor?.registerPlugin?.('BackupFiles'):null;
+    if(bridge?.httpRequest){
+      const result=await bridge.httpRequest({url:endpoint,method:'POST',body,headers});
+      payload=JSON.parse(result?.text||'{}');
+    }else{
+      const r=await fetch(endpoint,{method:'POST',headers,body}).catch(()=>{throw new Error('浏览器跨域限制，书籍搜索请使用 Android 版');});
+      payload=await r.json();
+    }
+    if(payload.errcode&&payload.errcode!==0)throw new Error(payload.errmsg||'微信读书搜索失败');
+    const books=(payload.results||[]).flatMap(group=>group.books||[]);
+    return books.map(item=>{const v=item.bookInfo||{};return {src:'weread',srcId:String(v.bookId||uuid()),title:v.title||'',cover:v.cover||'',year:String(v.publishTime||v.publishDate||'').slice(0,4),creator:v.author||'',summary:v.intro||'',publisher:v.publisher||'',total:0,score:v.newRating?Number(v.newRating)/100:''};}).filter(x=>x.title);
+  },
+  async search(type,kw){
+    if(type==='anime'){
+      const [bgm,tmdb]=await Promise.allSettled([this.bangumi(kw,2),this.tmdbOptional(kw,'tv')]);
+      return [...(bgm.status==='fulfilled'?bgm.value:[]),...(tmdb.status==='fulfilled'?tmdb.value:[])];
+    }
+    if(type==='book'){
+      const [weread,bangumiBooks]=await Promise.allSettled([this.weread(kw),this.bangumi(kw,1)]);
+      return [...(weread.status==='fulfilled'?weread.value:[]),...(bangumiBooks.status==='fulfilled'?bangumiBooks.value:[])];
+    }
+    if(type==='movie'||type==='tv'){
+      const [tmdb,bangumi]=await Promise.allSettled([this.tmdbOptional(kw,type),this.bangumi(kw,6)]);
+      const results=[...(tmdb.status==='fulfilled'?tmdb.value:[]),...(bangumi.status==='fulfilled'?bangumi.value:[])];
+      if(!results.length&&!localStorage.getItem('tmdb_key'))throw new Error('TMDB 未配置 Key，当前仅尝试 Bangumi；请手动输入或在设置中配置 Key');
+      return results;
+    }
+    return[];
+  }
+};
+
+/* ============ store ============ */
+const store={records:[],route:'home',filters:{status:'all',type:'all',q:''},async load(){this.records=(await DB.all()).map(normalizeRecord);this.records.sort((a,b)=>(pinFavorites&&Number(b.favorite)-Number(a.favorite))||((b.lastProgressAt||b.addedAt||0)-(a.lastProgressAt||a.addedAt||0)));},get(id){return this.records.find(r=>r.id===id);},async save(r,touchProgress=false){r=persistActiveSeason(normalizeRecord(r));const previous=r.id?this.get(r.id):null;r.updatedAt=Date.now();if(!r.id){r.id=uuid();r.addedAt=Date.now();r.lastProgressAt=r.addedAt;}if(touchProgress){r.lastProgressAt=Date.now();const _d=new Date();const _mk=_d.getFullYear()+'-'+String(_d.getMonth()+1).padStart(2,'0');r.activity={...(r.activity||{})};r.activity[_mk]=(r.activity[_mk]||0)+1;}if(r.status==='done'&&!r.watchedAt)r.watchedAt=Date.now();if(previous&&previous.status==='done'&&r.status!=='done')r.watchedAt=0;if(r.type==='tv'||r.type==='anime'){const sk=String(r.season||1);const s=r.seasons&&r.seasons[sk];if(s&&s.total>0&&s.cur>=s.total&&!s.doneAt)s.doneAt=r.lastProgressAt||r.updatedAt||Date.now();}await DB.put(r);await this.load();return r;},async remove(id){await DB.del(id);await this.load();}};
+let pinFavorites=true;
+let selectMode=false;
+let selectedIds=new Set();
+let listMenuOpen=false;
+
+/* ============ render helpers ============ */
+function displayCover(r){
+  // 动漫/剧集：封面一律取当前激活季自己的封面；当前季无封面（如新增空季）返回空，显示占位首字母。
+  if(['tv','anime'].includes(r.type))return r.seasons?.[String(r.season||1)]?.cover||'';
+  return r.cover||'';
+}
+function doneAtOf(r){
+  // 当前条目/当前季的「看完时间」：动漫/剧集按当前季集数满，电影/书按 done 状态。
+  if(r.type==='movie'||r.type==='book')return r.status==='done'?(r.watchedAt||r.updatedAt||0):0;
+  const s=r.seasons?.[String(r.season||1)];
+  if(s&&s.total>0&&s.cur>=s.total)return s.doneAt||r.watchedAt||r.updatedAt||0;
+  return 0;
+}
+function doneDateText(r){const at=doneAtOf(r);if(!at)return '';const d=new Date(at);return `${d.getMonth()+1}月${d.getDate()}日看完`;}
+function doneEvents(r){
+  // 一个条目在自然年里的「看完事件」列表：动漫/剧集每个集数满的季算一条，电影/书 done 算一条。
+  const ev=[];
+  if(r.type==='movie'||r.type==='book'){
+    if(r.status==='done')ev.push({type:r.type,at:r.watchedAt||r.updatedAt||r.addedAt||0,rating:r.rating||0});
+  }else{
+    for(const s of Object.values(r.seasons||{})){
+      if(s.total>0&&s.cur>=s.total)ev.push({type:r.type,at:s.doneAt||r.watchedAt||r.updatedAt||r.addedAt||0,rating:s.rating||0});
+    }
+  }
+  return ev.filter(e=>e.at>0);
+}
+function coverHtml(r){const cls=TYPE_COVER[r.type]||'book';const fallback=`<div class="cover ${cls}" ${r.cover?'style="display:none"':''}>${esc((r.title||'?').slice(0,1))}</div>`;return r.cover?`<img class="cover ${cls}" src="${esc(r.cover)}" alt="${esc(r.title||'')} 海报" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">${fallback}`:fallback;}
+function starsHtml(n){const rating=clampRating(n);let s='<span class="stars" aria-label="评分 '+rating+' / 5">';for(let i=1;i<=5;i++)s+=`<span class="s${i<=rating?' on':''}">★</span>`;return s+'</span>';}
+function progressText(r){
+  if(r.type==='movie')return r.status==='done'?'已观看':'未观看';
+  if(r.type==='book')return `第 ${r.cur||0} 章`;
+  if(r.type==='tv')return `${seasonLabel(r,r.season||1)} E${String(r.cur||0).padStart(2,'0')}`;
+  return `第 ${r.cur||0} 集`;
+}
+function totalText(r){
+  if(r.type==='movie')return '';
+  if(r.type==='book')return r.total?`/ ${r.total} 章`:'';
+  if(r.type==='tv')return r.total?`/ ${r.total} 集`:'';
+  return r.total?`/ ${r.total} 集`:'';
+}
+function progressPct(r){
+  if(r.type==='movie')return r.status==='done'?100:0;
+  if(!r.total||!r.cur)return 0;
+  return Math.min(100,Math.round(r.cur/r.total*100));
+}
+function isComplete(r){if(r.type==='movie')return r.status==='done';return r.total&&r.cur>=r.total;}
+
+/* ============ views ============ */
+function vHome(){
+  const watching=store.records.filter(r=>r.status==='watching');
+  let h='';
+  if(watching.length===0){
+    h+=`<div class="empty"><div class="big">⌑</div><h3>还没有进行中的记录</h3><p>点右下角 + 添加一部动漫、电影、剧集或书籍<br>可搜索资料，也可手动记录</p></div>`;
+  }else{
+    h+=`<div class="record-list">${watching.map(r=>cardHtml(r)).join('')}</div>`;
+  }
+  return h;
+}
+function favoriteButtonHtml(r){return `<button class="favorite-btn ${r.favorite?'on':''}" type="button" aria-label="${r.favorite?'取消收藏':'收藏'} ${esc(r.title)}" onclick="event.stopPropagation();toggleFavorite('${esc(r.id)}')">${r.favorite?'★':'☆'}</button>`;}
+function cardHtml(r,compact){
+  const pct=progressPct(r);
+  const complete=isComplete(r);
+  const activeSeason=['tv','anime'].includes(r.type)?r.seasons?.[String(r.season||1)]:null;
+  const visibleRating=activeSeason?clampRating(activeSeason.rating):r.rating;
+  const selected=selectedIds.has(r.id);
+  const check=selectMode?`<input class="selection-check" type="checkbox" ${selected?'checked':''} aria-label="选择 ${esc(r.title)}" onclick="event.stopPropagation();toggleSelected('${esc(r.id)}')">`:'';
+  const favorite=favoriteButtonHtml(r);
+  const coverR={...r,cover:displayCover(r)};
+  return `<div class="record-card ${selected?'selected':''}" data-record-id="${esc(r.id)}" role="link" tabindex="0" onclick="${selectMode?`toggleSelected('${esc(r.id)}')`:`go('detail/${r.id}')`}" onkeydown="if(event.key==='Enter'||event.key===' ')${selectMode?`toggleSelected('${esc(r.id)}')`:`go('detail/${r.id}')`}"">
+    ${check}${coverHtml(coverR)}
+    <div class="card-body">
+      <div class="card-title">${favorite}<span class="card-title-text">${esc(r.title)}</span></div>
+      <div class="card-meta"><span class="type-tag">${TYPE_NAME[r.type]}</span><span>${progressText(r)}${totalText(r)}</span> ${visibleRating?starsHtml(visibleRating):''}</div>
+      ${(activeSeason?.shortReview||r.shortReview)&&!compact?`<div class="card-review">${esc(activeSeason?.shortReview||r.shortReview)}</div>`:''}
+      <div class="card-foot">
+        <div class="progress-bar"><i style="width:${pct}%"></i></div>
+        ${r.status==='watching'&&!complete?`<button class="plus-btn" onclick="event.stopPropagation();plusOne('${r.id}')">+</button>`:''}
+        ${complete?`<span class="badge done">完成</span>`:''}
+      </div>
+    </div>
+  </div>`;
+}
+function listMenuHtml(){return listMenuOpen?`<div class="more-menu"><button onclick="toggleFavoritePinning()">${pinFavorites?'取消收藏置顶':'收藏置顶'}</button><button onclick="enterSelectionMode()">选择并删除</button></div>`:'';}
+function toggleListMenu(event){event.stopPropagation();listMenuOpen=!listMenuOpen;render();}
+function toggleFavoritePinning(){pinFavorites=!pinFavorites;listMenuOpen=false;store.load().then(render);}
+function enterSelectionMode(){selectMode=true;selectedIds=new Set();listMenuOpen=false;render();}
+function exitSelectionMode(){selectMode=false;selectedIds.clear();render();}
+function toggleSelected(id){if(selectedIds.has(id))selectedIds.delete(id);else selectedIds.add(id);render();}
+function selectAllVisible(){const visible=[...document.querySelectorAll('#view [data-record-id]')].map(x=>x.dataset.recordId);if(visible.length&&visible.every(id=>selectedIds.has(id)))visible.forEach(id=>selectedIds.delete(id));else visible.forEach(id=>selectedIds.add(id));render();}
+async function deleteSelected(){if(!selectedIds.size){toast('请先选择记录');return;}if(!confirm('确定删除已选择的 '+selectedIds.size+' 条记录？'))return;for(const id of selectedIds)await DB.del(id);selectMode=false;selectedIds.clear();await store.load();render();toast('已删除');}
+async function toggleFavorite(id){const r=store.get(id);if(!r)return;r.favorite=!r.favorite;await store.save(r,false);render();}
+function vList(type='all'){ 
+  const f=store.filters;
+  let items=store.records.slice();
+  if(type!=='all')items=items.filter(r=>r.type===type);
+  if(type==='all'&&f.status!=='all')items=items.filter(r=>r.status===f.status);
+  if(type==='all'&&f.type!=='all')items=items.filter(r=>r.type===f.type);
+  if(f.q)items=items.filter(r=>(r.title+r.shortReview).toLowerCase().includes(f.q.toLowerCase()));
+  let h=`<div class="view-head"><h1>${type==='all'?'全部记录':TYPE_NAME[type]}<div class="sub">${items.length} 条记录</div></h1><div class="view-actions"><button class="more-btn" type="button" aria-label="更多操作" onclick="toggleListMenu(event)">⋮</button>${listMenuHtml()}</div></div>`;
+  if(selectMode)h+=`<div class="selection-bar"><input class="selection-check" type="checkbox" aria-label="全选" ${items.length&&items.every(r=>selectedIds.has(r.id))?'checked':''} onclick="selectAllVisible()"><span class="count">已选择 ${selectedIds.size} 项</span><button class="btn btn-ghost" style="min-height:36px;padding:6px 10px" onclick="exitSelectionMode()">取消</button><button class="btn btn-danger" style="min-height:36px;padding:6px 10px" onclick="deleteSelected()">删除</button></div>`;
+  if(type==='all'&&f.q)h+=`<div class="active-query">搜索：${esc(f.q)} <button type="button" aria-label="清除搜索" onclick="clearSearch()">×</button></div>`;
+  if(type!=='all'){
+    if(items.length===0)h+=`<div class="empty"><div class="big">⌑</div><h3>还没有${TYPE_NAME[type]}记录</h3><p>点右下角 + 添加一条记录</p></div>`;
+    else h+=`<div class="record-list">${items.map(r=>cardHtml(r)).join('')}</div>`;
+    return h;
+  }
+  h+=`<div class="filter-scroll">`;
+  const sT=[['all','全部'],['watching','在看'],['wishlist','想看'],['done','看过'],['dropped','弃坑']];
+  h+=sT.map(s=>`<button class="filter-chip ${f.status===s[0]?'on':''}" onclick="setFilter('status','${s[0]}')">${s[1]}</button>`).join('');
+  h+=`</div><div class="filter-scroll">`;
+  const tT=[['all','全部类型'],['anime','动漫'],['movie','电影'],['tv','剧集'],['book','书籍']];
+  h+=tT.map(t=>`<button class="filter-chip ${f.type===t[0]?'on':''}" onclick="setFilter('type','${t[0]}')">${t[1]}</button>`).join('');
+  h+=`</div>`;
+  if(items.length===0){h+=`<div class="empty"><div class="big">⌑</div><h3>没有匹配的记录</h3><p>调整筛选条件，或添加新记录</p></div>`;}
+  else h+=`<div class="record-list">${items.map(r=>cardHtml(r)).join('')}</div>`;
+  return h;
+}
+/* legacy list row renderer removed: all-records uses the same cards as category views */
+let statsYear=new Date().getFullYear();
+function vStats(){
+  const rs=store.records;
+  const year=statsYear;
+  const events=[];for(const r of rs)for(const ev of doneEvents(r))if(new Date(ev.at).getFullYear()===year)events.push(ev);
+  const total=events.length;
+  const byType={anime:0,movie:0,tv:0,book:0};events.forEach(e=>byType[e.type]++);
+  const rated=events.filter(e=>e.rating>0);
+  const avg=rated.length?rated.reduce((s,e)=>s+e.rating,0)/rated.length:0;
+  const maxR=rated.length?Math.max(...rated.map(e=>e.rating)):0;
+  const dist=[0,0,0,0,0];rated.forEach(e=>{dist[e.rating-1]++;});const maxDist=Math.max(1,...dist);
+  const monthly=Array(12).fill(0);for(const r of rs){const act=r.activity||{};for(const [mk,n] of Object.entries(act)){const p=mk.split('-').map(Number);if(p[0]===year)monthly[p[1]-1]+=n;}}const maxMonth=Math.max(1,...monthly);const hasActivity=monthly.some(n=>n>0);
+  let h=`<div class="view-head"><h1>统计<div class="sub">共 ${rs.length} 条记录</div></h1></div>`;
+  h+=`<div style="display:flex;align-items:center;justify-content:center;gap:20px;margin:2px 0 16px">
+    <button class="btn btn-ghost" style="min-height:40px;padding:8px 16px" aria-label="上一年" onclick="statsYear--;render()">◀</button>
+    <div style="font-size:18px;font-weight:500;color:var(--ink);font-family:var(--font-mono)">${year} 年度总结</div>
+    <button class="btn btn-ghost" style="min-height:40px;padding:8px 16px" aria-label="下一年" onclick="statsYear++;render()">▶</button>
+  </div>`;
+  if(total===0){
+    h+=`<div class="empty" style="padding:26px"><div class="big">⌑</div><h3>${year} 年还没有看完的记录</h3><p>标记一部作品为「看过」，或把某一季集数补满，这里就会有年度总结。</p></div>`;
+  }else{
+    h+=`<div style="background:#2D4A3E;border-radius:8px;padding:16px;color:#FBF7EC;margin-bottom:18px">
+      <div style="font-size:12px;opacity:.75;margin-bottom:6px">这一年看完</div>
+      <div style="font-size:34px;font-weight:700;line-height:1;font-family:var(--font-mono)">${total}</div>
+      <div style="display:flex;gap:14px;margin-top:12px;font-size:12px;flex-wrap:wrap">
+        <span>动漫 ${byType.anime} 季</span><span>剧集 ${byType.tv} 季</span><span>电影 ${byType.movie} 部</span><span>书 ${byType.book} 本</span>
+      </div>
+      <div style="border-top:1px solid rgba(251,247,236,.25);margin-top:12px;padding-top:10px;display:flex;justify-content:space-between;font-size:12px">
+        <span>平均 ${avg?avg.toFixed(1):'—'} 星</span><span>${maxR?`最高 ${maxR} 星`:'未评分'}</span>
+      </div>
+    </div>`;
+    if(rated.length){
+      h+=`<div class="section-label">评分分布</div><div style="display:flex;align-items:flex-end;gap:10px;height:84px;padding:0 4px">`;
+      for(let i=1;i<=5;i++){const hh=dist[i-1]/maxDist*100;h+=`<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%"><div style="width:100%;background:${i>=4?'var(--ochre)':'var(--ink-green)'};height:${dist[i-1]>0?Math.max(hh,3):0}%;border-radius:2px"></div><div style="font-size:11px;color:var(--muted);margin-top:4px">${i}★</div></div>`;}
+      h+=`</div>`;
+    }
+  }
+  if(hasActivity){
+    h+=`<div class="section-label">追更活跃</div><div style="display:flex;align-items:flex-end;gap:3px;height:60px">`;
+    for(let m=0;m<12;m++){const hh=monthly[m]/maxMonth*100;h+=`<div style="flex:1;background:${monthly[m]===maxMonth?'var(--ochre)':'var(--ink-green)'};height:${monthly[m]>0?Math.max(hh,3):0}%;border-radius:2px"></div>`;}
+    h+=`</div><div style="display:flex;gap:3px;margin-top:6px;font-size:10px;color:var(--muted);font-family:var(--font-mono)">${Array.from({length:12},(_,i)=>`<span style="flex:1;text-align:center">${i+1}</span>`).join('')}</div>`;
+  }
+  const cnt=k=>rs.filter(r=>r.status===k).length;
+  h+=`<div class="section-label">当前库存</div><div class="stat-grid">
+    <div class="stat-card"><div class="n">${cnt('watching')}</div><div class="l">在看</div></div>
+    <div class="stat-card"><div class="n">${cnt('wishlist')}</div><div class="l">想看</div></div>
+    <div class="stat-card"><div class="n">${cnt('done')}</div><div class="l">看过</div></div>
+    <div class="stat-card"><div class="n">${cnt('dropped')}</div><div class="l">弃坑</div></div>
+  </div>`;
+  h+=`<div class="section-label">数据浏览</div><button class="btn btn-ghost btn-block" onclick="go('list')">查看全部记录</button>`;
+  if(rs.length===0)h+=`<div class="empty"><div class="big">⌑</div><h3>暂无数据</h3><p>添加记录后这里会显示统计</p></div>`;
+  return h;
+}
+function vSettings(){
+  const key=localStorage.getItem('tmdb_key')||'';const theme=currentTheme();const auto=followSystemTheme();
+  return `<div class="view-head"><h1>设置</h1></div>
+  <div class="section-label">外观</div>
+  <div class="field"><label>颜色模式</label><select class="select" ${auto?'disabled':''} onchange="applyTheme(this.value);render()">${Object.entries(THEMES).map(([value,label])=>`<option value="${value}" ${theme===value?'selected':''}>${label}</option>`).join('')}</select><label style="display:flex;align-items:center;gap:8px;margin-top:10px;font-size:13px;color:var(--warm-gray)"><input type="checkbox" ${auto?'checked':''} onchange="setThemeFollowSystem(this.checked)"> 跟随系统深浅色</label></div>
+  <div class="section-label">WebDAV 同步</div>
+  <div class="field"><label>服务器地址</label><input class="input" id="webdavUrl" type="text" inputmode="url" placeholder="https://example.com/dav/folioframe" value="${esc(webdavValue('url'))}" oninput="saveWebdav('url',this.value)"></div>
+  <div class="field"><label>用户名</label><input class="input" id="webdavUser" type="text" autocomplete="username" value="${esc(webdavValue('user'))}" oninput="saveWebdav('user',this.value)"></div>
+  <div class="field"><label>密码</label><input class="input" id="webdavPass" type="password" autocomplete="current-password" value="${esc(webdavValue('pass'))}" oninput="saveWebdav('pass',this.value)"></div>
+  <div class="btn-row"><button class="btn btn-primary" onclick="webdavPush()">推送到云端</button><button class="btn btn-ghost" onclick="webdavPull()">从云端拉取</button></div>
+  <div class="section-label">本地备份</div>
+  <div class="btn-row"><button class="btn btn-primary" onclick="exportData()">导出备份</button><button class="btn btn-ghost" onclick="importData()">导入备份</button></div>
+
+  <div class="section-label">TMDB API Key</div>
+  <div class="field"><input class="input" id="tmdbKey" type="text" placeholder="themoviedb.org 申请的 key" value="${esc(key)}" oninput="saveKey(this.value)"><div class="hint">用于电影与剧集搜索。输入后自动只存到本机。</div></div>
+  <div class="section-label">微信读书 API Key</div>
+  <div class="field"><input class="input" id="wereadKey" type="text" placeholder="wrk-xxxxxxxx" value="${esc(localStorage.getItem('weread_key')||'')}" oninput="localStorage.setItem('weread_key',this.value.trim())"></div>
+  <div class="section-label">关于</div>
+  <p style="font-size:13px;color:var(--muted);line-height:1.7">卷影 · FolioFrame 0.5.0。本地优先的书影音与故事记录库。所有记录存储在你的设备上，不上传任何服务器。元数据来自 Bangumi / TMDB / 微信读书。</p>
+  <p class="source-note" style="margin-top:10px">图标来源：<a href="https://icons8.com" target="_blank" rel="noreferrer">Icons8</a></p>`;
+}
+
+/* ============ detail ============ */
+let editState=null;
+let editSaveTimer=null;
+let editSaveBusy=false;
+function queueEditSave(){
+  clearTimeout(editSaveTimer);
+  editSaveTimer=setTimeout(async()=>{
+    if(!editState||editSaveBusy)return;editSaveBusy=true;
+    try{
+      const old=store.get(editState.id);const progressChanged=old&&(old.cur!==editState.cur||old.season!==editState.season||old.status!==editState.status);
+      await store.save(editState,progressChanged);
+    }finally{editSaveBusy=false;}
+  },900);
+}
+function vDetail(id){
+  let r=store.get(id);if(!r)return `<div class="empty"><h3>记录不存在</h3></div>`;
+  if(!editState||editState.id!==id){
+    editState=JSON.parse(JSON.stringify(r));
+    if(editState.type==='tv'||editState.type==='anime'){
+      const active=editState.seasons?.[String(editState.season||1)]||{};
+      editState.cur=active.cur??editState.cur??0;editState.total=active.total??editState.total??0;editState.status=active.status||editState.status||'watching';
+      editState.rating=clampRating(active.rating??editState.rating);editState.shortReview=active.shortReview??editState.shortReview??'';editState.summary=active.summary??editState.summary??'';
+    }
+  }
+  r={...r,...editState};
+  const activeSeasonMeta=['tv','anime'].includes(r.type)?r.seasons?.[String(r.season||1)]:null;
+  // 封面只显示当前季自己的；当前季无封面（新增空季）置空显示占位，不再回退到作品主图。
+  if(['tv','anime'].includes(r.type))r.cover=activeSeasonMeta?.cover||'';
+  if(activeSeasonMeta?.summary)r.summary=activeSeasonMeta.summary;
+  const cls=TYPE_COVER[r.type];
+  let h=`<div class="detail-head">
+    ${r.cover?`<button class="cover-button" type="button" aria-label="查看 ${esc(r.title||'')} 海报" onclick="openPosterById('${esc(r.id)}')"><img class="detail-cover" src="${esc(r.cover)}" alt="${esc(r.title||'')} 海报" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="detail-cover cover ${cls} ph" style="display:none">${esc((r.title||'?').slice(0,1))}</div></button>`:`<div class="detail-cover cover ${cls} ph">${esc((r.title||'?').slice(0,1))}</div>`}
+    <div style="flex:1;min-width:0"><h1>${favoriteButtonHtml(r)}<input class="title-edit" aria-label="编辑标题" value="${esc(r.title)}" oninput="editState.title=this.value;queueEditSave()"></h1>
+    <div class="meta">${TYPE_NAME[r.type]} · ${r.year||'—'} · ${r.creator||''}</div>
+    <div class="cover-tools"><button class="btn btn-ghost" type="button" onclick="chooseCoverFile()">${r.cover?'替换封面':'上传封面'}</button>${r.cover?`<button class="btn btn-ghost" type="button" onclick="clearCover()">移除封面</button>`:''}</div>
+    <div style="margin-top:8px"><span class="badge ${r.status}">${STATUS_NAME[r.status]}</span> ${r.rating?starsHtml(r.rating):'<span style="font-size:12px;color:var(--muted)">未评分</span>'}</div></div>
+  </div>`;
+  // status
+  h+=`<div class="field"><label>状态</label><div class="segment" id="segStatus">`;
+  Object.entries(STATUS_NAME).forEach(([k,v])=>{h+=`<button class="${editState.status===k?'on':''}" onclick="editState.status='${k}';render();queueEditSave()">${v}</button>`;});
+  h+=`</div></div>`;
+  // progress
+  if(r.type!=='movie'){
+    h+=`<div class="field"><label>当前进度（${r.type==='book'?'章':r.type==='tv'?'集':'集'}）</label>
+    <input class="input" type="number" min="0" value="${editState.cur||0}" oninput="editState.cur=+this.value;queueEditSave()"></div>`;
+    if(r.type==='tv'||r.type==='anime')h+=`<div class="field"><label>季</label><div style="display:flex;gap:8px"><select class="select" style="flex:1" onchange="changeEditSeason(this.value)">${seasonKeys(editState).map(s=>`<option value="${s}" ${String(editState.season||1)===s?'selected':''}>${seasonLabel(editState,s)}</option>`).join('')}</select><button class="btn btn-ghost" style="min-height:44px;padding:8px 12px" onclick="openSeasonMetadataSearch('${esc(r.id)}')">搜索补全</button><button class="btn btn-ghost" style="min-height:44px;padding:8px 12px" onclick="addEditSeason()">新季</button><button class="btn btn-ghost" style="min-height:44px;padding:8px 12px" onclick="deleteEditSeason()">删除本季</button></div></div>`;
+
+    h+=`<div class="field"><label>总数（留空则不计百分比）</label><input class="input" type="number" min="0" value="${editState.total||''}" oninput="editState.total=+this.value||0;queueEditSave()"></div>`;
+  }
+  const seasonal=['tv','anime'].includes(r.type);const seasonName=seasonal?seasonLabel(editState,editState.season||1):'';
+  // rating
+  h+=`<div class="field"><label>${seasonal?seasonName+'评分':'评分'}（1-5）</label><div class="stars-input" id="starsInput">`;
+  for(let i=1;i<=5;i++)h+=`<button class="s${(editState.rating||0)>=i?' on':''}" aria-label="${i} 星" onclick="editState.rating=${i};persistActiveSeason(editState);render();queueEditSave()">★</button>`;
+  h+=`</div><button class="btn btn-ghost" style="margin-top:8px;padding:4px 12px;font-size:12px" onclick="editState.rating=0;persistActiveSeason(editState);render();queueEditSave()">清除评分</button></div>`;
+  // review
+  h+=`<div class="field"><label>${seasonal?seasonName+'短评':'一句话短评'}</label><textarea class="textarea" id="reviewInput" placeholder="记下当下的感受…" oninput="editState.shortReview=this.value;queueEditSave()">${esc(editState.shortReview||'')}</textarea></div>`;
+  if(r.summary){h+=`<div class="section-label">${seasonal?seasonName+'简介':'简介'}</div><p class="detail-summary">${esc(r.summary)}</p>`;}
+  h+=`<div style="font-size:11px;color:var(--muted);font-family:var(--font-mono);margin-top:20px">来源：${sourceName(r.source)} · 添加于 ${fmtDate(r.addedAt)} · 更新于 ${fmtDate(r.updatedAt)}${doneDateText(r)?` · ${doneDateText(r)}`:''}</div>`;
+  return h;
+}
+function changeEditSeason(value){
+  persistActiveSeason(editState);const key=String(value);
+  const season=editState.seasons?.[key]||{cur:0,total:0,status:'watching',rating:0,shortReview:'',summary:''};
+  editState.season=key;editState.cur=season.cur||0;editState.total=season.total||0;editState.status=season.status||'watching';editState.rating=clampRating(season.rating);editState.shortReview=season.shortReview||'';editState.summary=season.summary||'';
+  render();queueEditSave();
+}
+function addEditSeason(){const next=Math.max(0,...seasonKeys(editState).map(key=>Number(String(key).match(/\d+(?!.*\d)/)?.[0])||0))+1;editState.seasons=editState.seasons||{};editState.seasons[String(next)]={cur:0,total:0,status:'watching',rating:0,shortReview:'',summary:'',label:`第 ${next} 季`};changeEditSeason(String(next));}
+function deleteEditSeason(){
+  if(!editState||!['tv','anime'].includes(editState.type))return;
+  const keys=seasonKeys(editState);
+  if(keys.length<=1){toast('至少保留一个季');return;}
+  const key=String(editState.season||1);
+  const season=editState.seasons?.[key]||{};
+  const hasContent=(season.cur>0)||season.shortReview||season.summary||season.srcId||season.cover;
+  const label=seasonLabel(editState,key);
+  if(!confirm(`删除${label}？${hasContent?'该季有进度/评分/简介/封面等内容，删除后无法恢复。':''}`))return;
+  delete editState.seasons[key];
+  const nextKey=seasonKeys(editState)[0];
+  const next=editState.seasons[nextKey]||{};
+  editState.season=nextKey;editState.cur=next.cur||0;editState.total=next.total||0;editState.status=next.status||'watching';editState.rating=clampRating(next.rating);editState.shortReview=next.shortReview||'';editState.summary=next.summary||'';
+  render();queueEditSave();toast(`已删除${label}`);
+}
+async function saveDetail(){if(editState)await queueEditSave();}
+async function delDetail(id){if(confirm('删除这条记录？')){const type=store.get(id)?.type||'home';await store.remove(id);toast('已删除');go(type);}}
+
+/* ============ add flow ============ */
+let addState={step:'search',type:'anime',kw:'',results:[],loading:false,source:'',picked:null,status:'watching',manual:{type:'anime'},mergeTargetId:'',mergeSeasonKey:''};
+function openAdd(){const current=['anime','tv','movie','book'].includes(store.route)?store.route:'anime';addState={step:'search',type:current,kw:'',results:[],loading:false,source:'',picked:null,status:'watching',manual:{type:current},mergeTargetId:'',mergeSeasonKey:''};renderAdd();}
+function openSeasonMetadataSearch(id){
+  const record=store.get(id);if(!record||!['anime','tv'].includes(record.type))return;
+  addState={step:'search',type:record.type,kw:record.seriesKey||record.title,results:[],loading:false,source:'',picked:null,status:record.status||'watching',manual:{type:record.type},mergeTargetId:id,mergeSeasonKey:String(record.season||1)};
+  renderAdd();
+}
+function closeAdd(){$('#addSheet').classList.remove('open');}
+function renderAdd(){
+  const sheet=$('#addSheet');
+  let body='';
+  if(addState.step==='search'){
+    body=`<div style="display:flex;gap:8px;align-items:center;margin-bottom:14px">
+      <select class="select" style="width:110px;flex:0 0 110px" aria-label="记录类型" onchange="pickType(this.value)">
+        ${Object.entries(TYPE_NAME).map(([k,v])=>`<option value="${k}" ${addState.type===k?'selected':''}>${v}</option>`).join('')}
+      </select>
+      <input class="input" id="kwInput" style="flex:1" placeholder="搜索标题…" value="${esc(addState.kw)}" onkeydown="if(event.key==='Enter')doSearch()">
+      <button class="btn btn-primary" onclick="doSearch()">搜</button>
+    </div>
+    <div class="search-source"><span class="source-note">${addState.mergeTargetId?'正在补全现有作品的季信息 · ':''}搜索结果来源：${addState.type==='book'?'微信读书 · Bangumi':'Bangumi · TMDB'}${addState.type!=='book'&&!localStorage.getItem('tmdb_key')?'（TMDB 尚未配置）':''}</span></div>
+    <div class="field"><label>添加后状态</label><select class="select" onchange="addState.status=this.value"><option value="watching" ${addState.status==='watching'?'selected':''}>在看</option><option value="wishlist" ${addState.status==='wishlist'?'selected':''}>想看</option><option value="done" ${addState.status==='done'?'selected':''}>看过</option><option value="dropped" ${addState.status==='dropped'?'selected':''}>弃坑</option></select></div>
+    <button class="btn btn-ghost btn-block" style="margin-bottom:16px;font-size:13px" onclick="goManual()">没找到？手动输入</button>`;
+    if(addState.loading)body+=`<div class="loading">搜索中…</div>`;
+    else if(addState.results.length){body+=addState.results.map((r,index)=>`<button class="result-item" onclick="pickResult(${index})"><img class="cover ${TYPE_COVER[addState.type]}" src="${esc(r.cover)}" alt="" onerror="this.style.visibility='hidden'"><div class="ri-body"><div class="ri-title">${esc(r.title)} <span class="source-badge ${r.src}">${sourceName(r.src)}</span></div><div class="ri-sub">${r.year||''} ${r.creator?'· '+esc(r.creator):''}</div>${r.summary?`<div class="ri-over">${esc(r.summary)}</div>`:''}</div><span class="pick">›</span></button>`).join('');}
+    else if(addState.kw)body+=`<div class="empty" style="padding:30px"><p>无结果，试试手动输入</p></div>`;
+  }else if(addState.step==='manual'){
+    body=manualFormHtml();
+  }
+  sheet.querySelector('.sheet-body').innerHTML=body;
+  sheet.classList.add('open');
+  if(addState.step==='search')$('#kwInput')?.focus();
+}
+function manualFormHtml(){
+  const p=addState.manual||{};
+  const t=p.type||(addState.type==='manual'?'anime':addState.type);
+  return `<div class="field"><label>类型</label><select class="select" onchange="addState.manual=addState.manual||{};addState.manual.type=this.value;addState.type=this.value;renderAdd()">
+    ${Object.entries(TYPE_NAME).map(([k,v])=>`<option value="${k}" ${t===k?'selected':''}>${v}</option>`).join('')}</select></div>
+  <div class="field"><label>标题 *</label><input class="input" value="${esc(p.title||'')}" oninput="addState.manual=addState.manual||{};addState.manual.title=this.value"></div>
+  <div class="field"><label>年份</label><input class="input" type="number" value="${p.year||''}" oninput="addState.manual=addState.manual||{};addState.manual.year=this.value"></div>
+  <div class="field"><label>${t==='book'?'作者':t==='movie'?'导演':t==='tv'?'创作者':'Studio'}</label><input class="input" value="${esc(p.creator||'')}" oninput="addState.manual=addState.manual||{};addState.manual.creator=this.value"></div>
+  <div class="field"><label>封面 URL（可选）</label><input class="input" value="${esc(p.cover||'')}" oninput="addState.manual=addState.manual||{};addState.manual.cover=this.value"><button class="btn btn-ghost" type="button" style="margin-top:8px;min-height:36px;padding:7px 10px;font-size:12px" onclick="chooseManualCoverFile()">从设备选择图片</button><div class="hint">设备图片会随 JSON 备份导出。</div></div>
+  ${t!=='movie'?`<div class="field"><label>总数（${t==='book'?'章':'集'}）</label><input class="input" type="number" value="${p.total||''}" oninput="addState.manual=addState.manual||{};addState.manual.total=+this.value||0"></div>`:''}
+  <div class="field"><label>添加后状态</label><select class="select" onchange="addState.status=this.value"><option value="watching" ${addState.status==='watching'?'selected':''}>在看</option><option value="wishlist" ${addState.status==='wishlist'?'selected':''}>想看</option><option value="done" ${addState.status==='done'?'selected':''}>看过</option><option value="dropped" ${addState.status==='dropped'?'selected':''}>弃坑</option></select></div>
+  <button class="btn btn-primary btn-block" style="margin-top:8px" onclick="saveManual()">添加</button>`;
+}
+function pickType(t){addState.type=t;if(t==='manual'){addState.step='manual';addState.manual={type:'anime'};}else{addState.step='search';addState.results=[];if(!addState.manual||addState.manual.type!==t)addState.manual={type:t};}renderAdd();}
+function goManual(){addState.step='manual';if(!addState.manual)addState.manual={type:addState.type};renderAdd();}
+async function doSearch(){addState.kw=$('#kwInput').value.trim();if(!addState.kw)return;addState.loading=true;renderAdd();try{addState.results=await API.search(addState.type,addState.kw);}catch(e){toast(e.message||'搜索失败');addState.results=[];}addState.loading=false;renderAdd();}
+async function pickResult(index){
+  const r=addState.results[Number(index)];if(!r)return;
+  // Cache a remote cover immediately when possible, while preserving its URL if the origin blocks downloading.
+  const cachedCover=await cacheCover(r.cover);
+  const season=['anime','tv'].includes(addState.type)&&r.src==='bangumi'?seasonInfo(r.title):null;
+  if(addState.mergeTargetId){
+    const target=store.get(addState.mergeTargetId);if(!target)return;
+    const targetSeason=String(addState.mergeSeasonKey||target.season||1);
+    // 统一确认弹窗：写明搜索结果解析出的季数和将要写入的季数，
+    // 由用户自行判断是否覆盖。解析不准或季数不匹配都不再硬性拦截。
+    const srcSeasonLabel=season?.key?(season.label||`第 ${season.key.replace(/^s/,'')} 季`):'未识别';
+    const dstSeasonLabel=seasonLabel(target,targetSeason);
+    if(!confirm(`「${r.title}」\n解析出的季：${srcSeasonLabel}\n将覆盖 ${dstSeasonLabel} 的资料。\n确定继续？`))return;
+    const seasonKey=targetSeason;
+    const seasonTitle=season?.label||seasonLabel(target,seasonKey);
+    target.seriesKey=season?.base||target.seriesKey||target.title;target.seasons=target.seasons||{};
+    const previous=target.seasons[seasonKey]||{};
+    const refreshed={...previous,total:r.total||previous.total||0,summary:r.summary||previous.summary||'',cover:cachedCover||previous.cover||'',srcId:r.srcId,source:r.src,label:seasonTitle||previous.label||''};
+    target.seasons[seasonKey]=refreshed;
+    // store.save persists the active season from top-level fields, so keep those in sync when refreshing it.
+    if(String(target.season||1)===seasonKey){target.total=refreshed.total;target.summary=refreshed.summary;if(!target.cover||seasonKey==='1')target.cover=refreshed.cover;}
+    if(!target.year&&r.year)target.year=r.year;if(!target.creator&&r.creator)target.creator=r.creator;
+    // Keep the top-level identity in sync when refreshing season one (or when it was never set).
+    if(!target.srcId||seasonKey==='1'){target.srcId=refreshed.srcId;target.source=refreshed.source;}
+    await store.save(target,false);closeAdd();editState=null;toast(`已补全 ${seasonTitle}，个人记录已保留`);go('detail/'+target.id);return;
+  }
+  const duplicate=store.records.find(x=>x.source===r.src&&x.srcId===r.srcId);
+  if(duplicate){closeAdd();editState=null;toast('这条记录已经在库中');go('detail/'+duplicate.id);return;}
+  if(season?.key){
+    const existing=store.records.find(x=>x.type===addState.type&&x.source==='bangumi'&&(x.seriesKey||seasonInfo(x.title).base)===season.base);
+    if(existing){
+      existing.seriesKey=season.base;
+      existing.seasons=existing.seasons||{};
+      // Always merge into the plain numeric key; normalizeRecord unifies any legacy 'sN' key.
+      const numeric=season.key.replace(/^s/,'');
+      const existingKey=/^\d+$/.test(numeric)?String(Number(numeric)):season.key;
+      existing.seasons[existingKey]={...(existing.seasons[existingKey]||{}),cur:0,total:r.total||0,status:addState.status||'watching',rating:0,shortReview:'',summary:r.summary||'',cover:cachedCover||'',label:season.label,srcId:r.srcId};
+      if(!existing.cover&&cachedCover)existing.cover=cachedCover;
+      await store.save(existing,true);closeAdd();editState=null;toast(`已合并到「${existing.title}」的${season.label}`);go('detail/'+existing.id);return;
+    }
+  }
+  const title=season?.key?season.base:r.title;
+  const rec={type:addState.type,title,seriesKey:season?.key?season.base:'',cover:cachedCover||'',year:r.year,creator:r.creator,summary:r.summary,source:r.src,srcId:r.srcId,status:addState.status||'watching',cur:0,total:r.total||0,season:season?.key||1,seasons:seasonMapForImport(season,r.total,addState.status||'watching',r.srcId,r.summary||''),rating:0,shortReview:'',progressUnit:addState.type==='book'?'chapter':undefined};
+  await store.save(rec,true);closeAdd();toast('已添加');go(addState.type);
+}
+async function saveManual(){
+  const m=addState.manual||{};if(!m.title){toast('请填标题');return;}
+  const t=m.type||addState.type||'anime';const cover=await cacheCover(m.cover||'');
+  const rec={type:t,title:m.title,cover,year:m.year||'',creator:m.creator||'',summary:'',source:'manual',srcId:'',status:addState.status||'watching',cur:0,total:m.total||0,season:1,rating:0,shortReview:'',progressUnit:t==='book'?'chapter':undefined};
+  await store.save(rec,true);closeAdd();toast('已添加');go(t);
+}
+
+/* ============ actions ============ */
+async function plusOne(id){const r=store.get(id);if(!r)return;if(r.type==='movie'){r.status='done';}else{r.cur=(r.cur||0)+1;if(r.total&&r.cur>=r.total){r.status='done';}}await store.save(r,true);render();toast(r.status==='done'?'看完了！':'进度 +1');}
+function setFilter(k,v){store.filters[k]=v;render();}
+function clearSearch(){store.filters.q='';render();}
+function dataUrlParts(dataUrl){const m=String(dataUrl||'').match(/^data:([^;,]+);base64,(.*)$/);return m?{mime:m[1],base64:m[2]}:null;}
+function extensionForMime(mime){return ({'image/jpeg':'jpg','image/png':'png','image/webp':'webp','image/gif':'gif','image/svg+xml':'svg'})[mime]||'bin';}
+function blobToDataUrl(blob){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=reject;reader.readAsDataURL(blob);});}
+async function cacheCover(url){
+  if(!url||String(url).startsWith('data:'))return url||'';
+  // Android uses the native bridge: it can cache sources that WebView CORS would otherwise reject.
+  if(isNativeAndroid()&&BackupFiles){try{const result=await BackupFiles.fetchImage({url});if(result?.dataUrl)return result.dataUrl;}catch(error){return url;}}
+  try{const response=await fetch(url,{mode:'cors',cache:'force-cache'});if(!response.ok)throw new Error('HTTP '+response.status);return await blobToDataUrl(await response.blob());}
+  catch(error){return url;}
+}
+async function cacheRemoteCovers(notify=false){
+  let cached=0,failed=0;
+  for(const original of store.records){
+    const record=JSON.parse(JSON.stringify(original));let changed=false;
+    if(record.cover&&!String(record.cover).startsWith('data:')){const local=await cacheCover(record.cover);if(local!==record.cover){record.cover=local;cached++;changed=true;}else failed++;}
+    for(const season of Object.values(record.seasons||{})){if(season.cover&&!String(season.cover).startsWith('data:')){const local=await cacheCover(season.cover);if(local!==season.cover){season.cover=local;cached++;changed=true;}else failed++;}}
+    if(changed)await store.save(record,false);
+  }
+  if(notify)toast(cached?`已缓存 ${cached} 张在线封面${failed?`，${failed} 张因图片服务器不允许浏览器跨域读取（Android 版可完整缓存）`:''}`:(failed?'在线封面均无法缓存：图片服务器不允许浏览器跨域读取（Android 版可完整缓存）':'没有可缓存的在线封面'));
+  return {cached,failed};
+}
+function downloadBlob(blob,name){const a=document.createElement('a');const url=URL.createObjectURL(blob);a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);}
+function coverRefs(record){const refs=[{holder:record,key:'cover',scope:'work'}];for(const [key,season] of Object.entries(record.seasons||{}))refs.push({holder:season,key:'cover',scope:'season-'+key});return refs;}
+async function createBackupBlob(records){
+  if(!window.JSZip)throw new Error('备份组件尚未加载');
+  // Covers belong inside the archive by default: resolve any remaining remote URL to a local
+  // data URL first, so the package is self-contained without the user having to trigger it.
+  if(!records){try{await cacheRemoteCovers(false);}catch(error){}}
+  const source=records||store.records;
+  const zip=new JSZip();const copies=JSON.parse(JSON.stringify(source));let imageCount=0;
+  for(const record of copies){for(const ref of coverRefs(record)){const parts=dataUrlParts(ref.holder[ref.key]);if(!parts)continue;const file=`covers/${record.id||uuid()}-${ref.scope}.${extensionForMime(parts.mime)}`;zip.file(file,parts.base64,{base64:true});ref.holder[ref.key]={localFile:file,mime:parts.mime};imageCount++;}}
+  const settings={tmdbKey:localStorage.getItem('tmdb_key')||'',theme:currentTheme(),followSystem:followSystemTheme()};
+  zip.file('records.json',JSON.stringify({app:'folioframe',version:'0.2.0',exportedAt:new Date().toISOString(),settings,records:copies},null,2));
+  const blob=await zip.generateAsync({type:'blob',compression:'DEFLATE',compressionOptions:{level:6}});
+  return {blob,imageCount,recordCount:copies.length};
+}
+function blobToBase64(blob){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result).split(',')[1]||'');reader.onerror=reject;reader.readAsDataURL(blob);});}
+function base64ToBlob(base64,mime='application/zip'){const bytes=atob(base64);const array=new Uint8Array(bytes.length);for(let i=0;i<bytes.length;i++)array[i]=bytes.charCodeAt(i);return new Blob([array],{type:mime});}
+async function exportData(){
+  try{
+    const backup=await createBackupBlob();
+    const name=`卷影-0.5.0-${fmtDate(Date.now())}.zip`;
+    // Resolve the Capacitor proxy at call time. The native plugin is registered by MainActivity;
+    // this is the official JS-side bridge and survives a WebView reload.
+    const nativeBackup=isNativeAndroid()?window.Capacitor?.registerPlugin?.('BackupFiles'):null;
+    if(nativeBackup){
+      await nativeBackup.createDocument({name,mimeType:'application/zip',base64:await blobToBase64(backup.blob)});
+      toast(`已保存到 Download：${name}`);
+    }else{
+      downloadBlob(backup.blob,name);
+      toast(`已导出 ${backup.recordCount} 条记录与 ${backup.imageCount} 张本地封面`);
+    }
+  }catch(e){if(e?.message!=='cancelled')toast(e.message||'导出失败');}
+}
+async function restoreCoverRef(zip,holder,key){const ref=holder?.[key];if(!ref?.localFile)return;const image=zip.file(ref.localFile);if(!image)throw new Error(`缺少封面文件：${ref.localFile}`);holder[key]=`data:${ref.mime||'image/jpeg'};base64,${await image.async('base64')}`;}
+async function importZip(file){
+  if(!window.JSZip)throw new Error('备份组件尚未加载');
+  const zip=await JSZip.loadAsync(file);const entry=zip.file('records.json');if(!entry)throw new Error('未找到 records.json');
+  const payload=JSON.parse(await entry.async('text'));const recs=Array.isArray(payload)?payload:(payload.records||[]);let count=0;
+  for(const raw of recs){if(!raw?.title)continue;const copy=JSON.parse(JSON.stringify(raw));await restoreCoverRef(zip,copy,'cover');for(const season of Object.values(copy.seasons||{}))await restoreCoverRef(zip,season,'cover');const record=normalizeRecord({...copy,id:copy.id||uuid(),addedAt:copy.addedAt||Date.now(),updatedAt:copy.updatedAt||Date.now()});await DB.put(record);count++;}
+  if(payload.settings){if(payload.settings.tmdbKey)localStorage.setItem('tmdb_key',payload.settings.tmdbKey);if(THEMES[payload.settings.theme])localStorage.setItem('folioframe_theme',payload.settings.theme);if(typeof payload.settings.followSystem==='boolean')localStorage.setItem('folioframe_theme_auto',payload.settings.followSystem?'true':'false');applyTheme(currentTheme(),false);}
+  await store.load();render();toast(`已导入 ${count} 条记录`);
+}
+async function importData(){try{if(isNativeAndroid()&&BackupFiles){const result=await BackupFiles.openDocument({mimeType:'application/zip'});await importZip(base64ToBlob(result.base64,'application/zip'));return;}const input=document.createElement('input');input.type='file';input.accept='.zip,application/zip';input.onchange=async()=>{const file=input.files?.[0];if(file)try{await importZip(file);}catch(e){toast(`导入失败：${e.message||'备份格式错误'}`);}};input.click();}catch(e){if(e?.message!=='cancelled')toast(`导入失败：${e.message||'备份格式错误'}`);}}
+
+/* ============ webdav sync ============ */
+const WEBDAV_FIELDS={url:'folioframe_webdav_url',user:'folioframe_webdav_user',pass:'folioframe_webdav_pass'};
+const WEBDAV_FILENAME='folioframe-backup.zip';
+function webdavValue(field){return localStorage.getItem(WEBDAV_FIELDS[field])||'';}
+function saveWebdav(field,value){const key=WEBDAV_FIELDS[field];if(key)localStorage.setItem(key,value??'');}
+function webdavTarget(){
+  const raw=webdavValue('url').trim();
+  if(!raw)throw new Error('请先填写 WebDAV 地址');
+  if(/\.zip$/i.test(raw))return raw;
+  return raw.replace(/\/+$/,'')+'/'+WEBDAV_FILENAME;
+}
+function webdavBridge(){return isNativeAndroid()?window.Capacitor?.registerPlugin?.('BackupFiles'):null;}
+async function webdavRequest(method,bodyBlob){
+  const target=webdavTarget();
+  const user=webdavValue('user');
+  const pass=webdavValue('pass');
+  // WebDAV servers rarely send CORS headers, so the Android build performs the request
+  // natively. The browser build falls back to fetch and reports the failure honestly.
+  const bridge=webdavBridge();
+  if(bridge?.webdavRequest){
+    const payload={url:target,method,username:user,password:pass};
+    if(bodyBlob)payload.base64=await blobToBase64(bodyBlob);
+    const result=await bridge.webdavRequest(payload);
+    if(method==='GET'&&result?.base64)return base64ToBlob(result.base64,'application/zip');
+    return null;
+  }
+  const headers={};
+  if(user)headers['Authorization']='Basic '+btoa(user+':'+pass);
+  const response=await fetch(target,{method,headers,body:bodyBlob});
+  if(!response.ok)throw new Error('WebDAV 返回 HTTP '+response.status+'（浏览器版可能受跨域限制，Android 版可完整同步）');
+  if(method==='GET')return await response.blob();
+  return null;
+}
+async function webdavPush(){
+  try{
+    toast('正在打包记录与封面…');
+    const backup=await createBackupBlob();
+    toast('正在上传到 WebDAV…');
+    await webdavRequest('PUT',backup.blob);
+    toast(`已上传 ${backup.recordCount} 条记录，共 ${(backup.blob.size/1048576).toFixed(1)} MB`);
+  }catch(e){toast(e.message||'上传失败');}
+}
+async function webdavPull(){
+  try{
+    webdavTarget();
+    if(!confirm('从云端拉取会用云端备份覆盖本机同 ID 记录，未在云端的本地记录会保留。确定继续？'))return;
+    toast('正在从 WebDAV 下载…');
+    const blob=await webdavRequest('GET');
+    if(!blob||!blob.size)throw new Error('云端没有可读取的备份文件');
+    await importZip(blob);
+  }catch(e){toast(e.message||'下载失败');}
+}
+function saveKey(value){const key=(value??$('#tmdbKey')?.value??'').trim();localStorage.setItem('tmdb_key',key);}
+
+/* ============ router ============ */
+function go(path){
+  // A side-nav destination is a fresh browse context; never leave a previous full-library query filtering it invisibly.
+  if(['home','anime','tv','movie','book','stats','settings'].includes(path))store.filters.q='';
+  const next='#/'+path;if(location.hash===next)route();else location.hash=next;
+}
+function backFromDetail(){
+  const id=location.hash.split('/')[2];const type=store.get(id)?.type||'list';
+  editState=null;go(type);
+}
+function animateRecordMovement(previousPositions){
+  if(!previousPositions?.size||window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+  requestAnimationFrame(()=>{
+    document.querySelectorAll('#view [data-record-id]').forEach(el=>{
+      const first=previousPositions.get(el.dataset.recordId);if(!first)return;
+      const last=el.getBoundingClientRect();
+      const dx=first.left-last.left,dy=first.top-last.top;
+      if(Math.abs(dx)+Math.abs(dy)<1)return;
+      el.animate([{transform:`translate(${dx}px,${dy}px)`},{transform:'translate(0,0)'}],{duration:260,easing:'cubic-bezier(.2,.8,.2,1)'});
+    });
+  });
+}
+function route(){
+  const previousPositions=new Map([...document.querySelectorAll('#view [data-record-id]')].map(el=>[el.dataset.recordId,el.getBoundingClientRect()]));
+  const hash=location.hash.slice(2)||'home';
+  const parts=hash.split('/');
+  const view=parts[0];
+  store.route=view;
+  let html='';
+  if(view==='home')html=vHome();
+  else if(view==='detail'&&parts[1])html=vDetail(parts[1]);
+  else if(['anime','tv','movie','book'].includes(view))html=vList(view);
+  else if(view==='list')html=vList();
+  else if(view==='stats')html=vStats();
+  else if(view==='settings')html=vSettings();
+  else html=vHome();
+  $('#view').innerHTML=html;
+  $('#view').scrollTop=0;
+  $('#fab').style.display=['stats','settings','detail'].includes(view)?'none':'flex';
+  updateNav(view);
+  animateRecordMovement(previousPositions);
+}
+function render(){route();}
+function updateNav(view){
+  const items=[['home','首页','home.svg'],['anime','动漫','anime.svg'],['tv','剧集','tv.png'],['movie','电影','movie.png'],['book','书籍','book.svg'],['stats','统计','stats.png'],['settings','设置','settings.svg']];
+  const counts={home:store.records.filter(r=>r.status==='watching').length,anime:store.records.filter(r=>r.type==='anime').length,tv:store.records.filter(r=>r.type==='tv').length,movie:store.records.filter(r=>r.type==='movie').length,book:store.records.filter(r=>r.type==='book').length,stats:'',settings:''};
+  $('#navList').innerHTML=items.map(i=>`<button class="nav-item ${view===i[0]?'active':''}" onclick="go('${i[0]}');closeNav()"><span class="ico"><img src="assets/icons/${i[2]}" alt=""></span>${i[1]}${counts[i[0]]?`<span class="count">${counts[i[0]]}</span>`:''}</button>`).join('');
+}
+function openNav(){$('#sidenav').classList.add('open');$('#overlay').classList.add('show');}
+function closeNav(){$('#sidenav').classList.remove('open');$('#overlay').classList.remove('show');}
+async function refreshLibrary(){
+  store.filters={status:'all',type:'all',q:''};selectMode=false;selectedIds.clear();listMenuOpen=false;editState=null;
+  await store.load();closeNav();go('home');toast('已刷新本机记录');
+}
+
+/* ============ search overlay ============ */
+function openSearch(){const overlay=$('#searchOverlay');overlay.classList.add('open');const input=$('#searchInput');input.value=store.filters.q||'';setTimeout(()=>input.focus(),0);}
+function closeSearch(){const overlay=$('#searchOverlay');overlay.classList.remove('open');}
+function applySearch(){store.filters.q=($('#searchInput').value||'').trim();closeSearch();go('list');}
+function chooseCoverFile(){const input=document.createElement('input');input.type='file';input.accept='image/*';input.onchange=async()=>{const file=input.files?.[0];if(!file||!editState)return;setEditCover(await readFileAsDataUrl(file));render();queueEditSave();};input.click();}
+function readFileAsDataUrl(file){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=reject;reader.readAsDataURL(file);});}
+function setEditCover(value){
+  if(!editState)return;
+  editState.cover=value||'';
+  // 封面按季存储：同时写入当前季，列表/详情/放大都从季封面读取。
+  if(['tv','anime'].includes(editState.type)){
+    const key=String(editState.season||1);
+    editState.seasons=editState.seasons||{};
+    editState.seasons[key]={...(editState.seasons[key]||{}),cover:value||''};
+  }
+}
+function clearCover(){if(!editState)return;setEditCover('');render();queueEditSave();}
+function chooseManualCoverFile(){const input=document.createElement('input');input.type='file';input.accept='image/*';input.onchange=async()=>{const file=input.files?.[0];if(!file)return;addState.manual=addState.manual||{};addState.manual.cover=await readFileAsDataUrl(file);renderAdd();};input.click();}
+async function localizeCover(){if(!editState?.cover||editState.cover.startsWith('data:')){toast('封面已经保存在本地');return;}try{const r=await fetch(editState.cover);if(!r.ok)throw new Error();setEditCover(await readFileAsDataUrl(await r.blob()));render();queueEditSave();toast('封面已保存到本地');}catch(e){toast('该封面无法本地化，请上传图片');}}
+function openPoster(url,title){const viewer=$('#posterViewer');$('#posterViewerImage').src=url;$('#posterViewerImage').alt=title+' 海报';$('#posterViewerCaption').textContent=title;viewer.classList.add('open');}
+function openPosterById(id){const r=(editState&&editState.id===id)?editState:store.get(id);const cover=displayCover(r);if(cover)openPoster(cover,r.title||'海报');}
+function closePoster(){$('#posterViewer').classList.remove('open');$('#posterViewerImage').removeAttribute('src');}
+
+/* ============ init ============ */
+async function migrateSeasonKeys(){
+  // normalizeRecord already unifies legacy 'sN' keys into numeric keys in memory on every
+  // load. Persist that once so storage itself stops carrying mixed key spellings. Nothing
+  // else is touched: no season is deleted here.
+  let changed=false;
+  const raw=await DB.all();
+  for(const rec of raw){
+    if(rec.type!=='tv'&&rec.type!=='anime')continue;
+    if(rec.season&&/^s\d+$/.test(String(rec.season))){changed=true;break;}
+    if(rec.seasons&&typeof rec.seasons==='object'&&Object.keys(rec.seasons).some(k=>/^s\d+$/.test(String(k)))){changed=true;break;}
+  }
+  if(changed){
+    await Promise.all(raw.map(r=>DB.put(normalizeRecord(r))));
+    await store.load();
+  }
+}
+async function init(){
+  applyTheme(document.documentElement.dataset.previewTheme||currentTheme(),false);
+  if(systemDark)systemDark.addEventListener?.('change',()=>{if(followSystemTheme())applyTheme(currentTheme(),false);});
+  await DB.open();
+  await store.load();
+  await migrateSeasonKeys();
+  // Existing URL covers migrate quietly in the background; new search results cache immediately.
+  cacheRemoteCovers(false).catch(()=>{});
+  window.addEventListener('hashchange',route);
+  $('#menuBtn').onclick=openNav;
+  $('#overlay').onclick=closeNav;
+  $('#fab').onclick=openAdd;
+  $('#searchBtn').onclick=openSearch;
+  $('#searchForm').onsubmit=e=>{e.preventDefault();applySearch();};
+  $('#searchInput').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();applySearch();}};
+  $('#searchClear').onclick=()=>{$('#searchInput').value='';$('#searchInput').focus();};
+  $('#searchOverlay').onclick=e=>{if(e.target.id==='searchOverlay')closeSearch();};
+  $('#posterClose').onclick=closePoster;
+  $('#posterViewer').addEventListener('click',e=>{if(e.target.id==='posterViewer')closePoster();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeNav();closeAdd();closePoster();closeSearch();listMenuOpen=false;render();}});
+  document.addEventListener('click',e=>{if(listMenuOpen&&!e.target.closest('.view-actions')){listMenuOpen=false;render();}});
+  // add sheet structure
+  const sheet=document.createElement('div');sheet.className='sheet';sheet.id='addSheet';sheet.innerHTML=`<div class="sheet-bg" onclick="closeAdd()"></div><div class="sheet-panel"><div class="sheet-head"><h2>添加记录</h2><button class="close" onclick="closeAdd()">×</button></div><div class="sheet-body"></div></div>`;document.body.appendChild(sheet);
+  if(!location.hash)location.hash='#/home';else route();
+  // Android already loads local assets from the APK. Do not let a WebView service worker pin an old HTML shell after an update.
+  if(!isNativeAndroid()&&'serviceWorker' in navigator && location.protocol.startsWith('http')){
+    navigator.serviceWorker.register('sw.js').catch(e=>console.error('FolioFrame service worker registration failed',e));
+  }
+}
+init();
+</script>
+</body>
+</html>

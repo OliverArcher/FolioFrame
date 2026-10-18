@@ -1,0 +1,19 @@
+{
+  "name": "folioframe",
+  "version": "0.5.0",
+  "private": true,
+  "description": "卷影 FolioFrame 本地优先书影音记录库",
+  "scripts": {
+    "build:standalone": "python build-single-file.py",
+    "android:sync": "npx cap sync android",
+    "android:apk": "cd android && gradlew.bat assembleRelease"
+  },
+  "dependencies": {
+    "@capacitor/android": "^7.4.0",
+    "@capacitor/cli": "^7.4.0",
+    "@capacitor/core": "^7.4.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.3"
+  }
+}
